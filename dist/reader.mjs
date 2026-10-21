@@ -7,7 +7,7 @@ export function splitTextNode(block,offset){
  while((node=walker.nextNode())){if(count+node.textContent.length>=offset){target=node;break;}count+=node.textContent.length;}
  if(!target)return [block.cloneNode(true),null];const range=doc.createRange();range.selectNodeContents(block);range.setEnd(target,Math.max(0,offset-count));const left=block.cloneNode(false);left.append(range.cloneContents());range.selectNodeContents(block);range.setStart(target,Math.max(0,offset-count));const right=block.cloneNode(false);right.append(range.cloneContents());right.removeAttribute('id');right.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));return [left,right];
 }
-export async function paginateBook(book,{host,progress=()=>{}}={}){
+export async function paginateBook(book,{host,progress=()=>{},editable=false}={}){
  const owned=!host;if(!host){host=document.createElement('div');host.className='reader-measure';host.innerHTML='<div class="reader-page-body reading"></div>';document.body.append(host);host=host.firstElementChild;}
  const container=owned?host.parentElement:null,pages=[];let current=[],chapter=0;
  const flush=()=>{if(current.length){pages.push({chapter,title:book.chapters[chapter].name,html:current.map(e=>e.outerHTML).join('')});current=[];}host.replaceChildren();};
@@ -19,6 +19,8 @@ export async function paginateBook(book,{host,progress=()=>{}}={}){
   for(const src of images){if(typeof Image==='undefined')break;const img=new Image();img.src=src;try{await img.decode();}catch{}}
   for(chapter=0;chapter<book.chapters.length;chapter++){
    progress('Preparando páginas · capítulo '+(chapter+1)+'/'+book.chapters.length);const c=book.chapters[chapter],doc=parseHTML(formatChapterHTML(c.html,{name:c.name,chapters:book.chapters}));
+   for(const div of [...doc.body.querySelectorAll('div')].reverse()){if(div.hasAttribute('data-editor-format')||div.hasAttribute('data-keep-lines')||[...div.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())||!div.querySelector('p,h1,h2,h3,table,figure,ul,ol'))continue;if(div.id&&!div.firstElementChild?.id)div.firstElementChild.id=div.id;div.replaceWith(...div.childNodes);}
+   if(editable){let serial=0;for(const node of doc.body.querySelectorAll('*'))node.setAttribute('data-page-node','c'+chapter+'n'+serial++);}
    const queue=[...doc.body.childNodes].map(node=>{if(node.nodeType===1)return node.cloneNode(true);if(!node.textContent.trim())return null;const p=document.createElement('p');p.textContent=node.textContent;return p;}).filter(Boolean);
    let operations=0;
    while(queue.length){const node=queue.shift();if(++operations%30===0)await new Promise(resolve=>setTimeout(resolve,0));if(fits(node)){host.append(node);current.push(node);continue;}
