@@ -1,0 +1,13 @@
+{
+  "name": "livro-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Editor local de ebooks e exportador EPUB",
+  "scripts": {
+    "start": "node servidor.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
