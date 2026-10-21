@@ -9,6 +9,7 @@ export function sanitize(html) {
     for (const e of [...doc.body.querySelectorAll('*')].reverse()) {
         const tag = e.localName;
         if (!allowed.has(tag)) { e.replaceWith(...e.childNodes); continue; }
+        const userFormat=e.getAttribute('data-editor-format')==='true',userStyles={color:e.style.color,backgroundColor:e.style.backgroundColor,fontSize:e.style.fontSize},mediaWidth=e.getAttribute('data-media-width');
         const spans={colspan:e.getAttribute('colspan'),rowspan:e.getAttribute('rowspan')},toc=e.getAttribute('data-toc');
         const align = e.style.textAlign || e.getAttribute('align');
         const id = e.id, href = e.getAttribute('href'), src = e.getAttribute('src'), alt = e.getAttribute('alt');
@@ -16,6 +17,8 @@ export function sanitize(html) {
         const className = /(?:^|[\s_-])(verse|poem|poetry|verso|poesia)(?:$|[\s_-])/i.test(e.className) ? 'verse' : '';
         [...e.attributes].forEach(a => e.removeAttribute(a.name));
         if (id) e.id = id;
+        if(userFormat){e.setAttribute('data-editor-format','true');for(const key of ['color','backgroundColor'])if(/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]+)$/i.test(userStyles[key]))e.style[key]=userStyles[key];if(['0.85em','1em','1.25em','1.5em'].includes(userStyles.fontSize))e.style.fontSize=userStyles.fontSize;}
+        if(tag==='img'&&['25%','50%','75%','100%'].includes(mediaWidth))e.setAttribute('data-media-width',mediaWidth);
         if(toc==='true')e.setAttribute('data-toc','true');
         if(['td','th'].includes(tag))for(const [k,v]of Object.entries(spans))if(/^[1-9]\d?$/.test(v||''))e.setAttribute(k,v);
         if (['left','right','center','justify'].includes(align)) e.style.textAlign = align;
@@ -46,6 +49,7 @@ body{font-family:serif;line-height:1.5;margin:0 4%;padding:0;overflow-wrap:break
 body *{font-family:inherit;}p{margin:0 0 .65em;text-indent:0;white-space:normal;}p+p{text-indent:1.2em;}
 h1,h2,h3,h4,h5,h6{line-height:1.25;text-align:left;text-indent:0;break-after:avoid;page-break-after:avoid;margin:1.3em 0 .8em;}h1{font-size:1.65em;}h2{font-size:1.3em;}h3{font-size:1.15em;}
 blockquote{margin:1em;}blockquote p{ text-indent:0; }
+img[data-media-width="25%"]{max-width:25%;}img[data-media-width="50%"]{max-width:50%;}img[data-media-width="75%"]{max-width:75%;}
 img{display:block;max-width:100%;max-height:95vh;width:auto;height:auto;margin:.6em auto;object-fit:contain;}figure{margin:1em 0;text-align:center;break-inside:avoid;page-break-inside:avoid;}figcaption,caption{text-align:center;font-size:.85em;text-indent:0;}
 pre,.verse{white-space:pre-wrap;text-indent:0;text-align:left;}table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;font-size:.9em;margin:1em auto;}td,th{padding:.3em;border:1px solid #999;overflow-wrap:anywhere;text-align:left;vertical-align:top;}td p,th p{text-indent:0;}
 nav,[data-toc]{text-align:left;}[data-toc] p,[data-toc] li{text-indent:0;margin:.5em 0;}nav ol,[data-toc]{padding-left:1.2em;}a{color:inherit;}hr{width:30%;margin:1.8em auto;}

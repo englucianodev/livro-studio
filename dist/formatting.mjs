@@ -5,7 +5,7 @@ const key=s=>cleanTOCLabel(s).normalize('NFKC').toLocaleLowerCase();
 export function formatChapterHTML(html,{name='',chapters=[],cleanTOC=true}={}){
     const doc=parseHTML(sanitize(html)),links=new Map(chapters.map((c,i)=>[key(c.name),'ch'+i+'.xhtml']));
     // A single font and flow rules supersede the fixed-page typography.
-    doc.querySelectorAll('[style]').forEach(e=>e.removeAttribute('style'));
+    doc.querySelectorAll('[style]').forEach(e=>{if(e.getAttribute('data-editor-format')!=='true')e.removeAttribute('style');});
     for(const p of [...doc.body.querySelectorAll('p')])if(p.querySelector('img')&&!p.textContent.trim()){
         const figure=doc.createElement('figure');if(p.id)figure.id=p.id;figure.append(...p.childNodes);p.replaceWith(figure);
     }
