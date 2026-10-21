@@ -1,3 +1,4 @@
+import {composePDFVisualLines} from './pdf-visuals.mjs';
 import {parseHTML,sanitize,escapeXML,looksLikeHeading} from './book-tools.mjs';
 import {cleanPDFMargins,pagesToHTML} from './pdf-layout.mjs';
 const norm=s=>s.normalize('NFKC').replace(/\s+/g,' ').trim().toLocaleLowerCase();
@@ -23,7 +24,7 @@ export function countHeadings(chapters){return chapters.reduce((n,c)=>n+(c.isCov
 export function buildPDFChapters(source,{removeMargins=source.removeMargins!==false,detectChapters=true}={}){
     const original=source.pages.filter(p=>!p.excluded),cleaned=cleanPDFMargins(source.pages.filter(p=>!p.manualHTML));
     const cleanByID=new Map(cleaned.pages.map(p=>[p.id,p]));
-    const pages=original.map(p=>removeMargins&&!p.manualHTML?cleanByID.get(p.id)||p:p);
+    const pages=original.map(p=>removeMargins&&!p.manualHTML?cleanByID.get(p.id)||p:p).map(composePDFVisualLines);
     const fontWeights=new Map();for(const l of pages.flatMap(p=>p.lines||[])){const size=Math.round(l.size);fontWeights.set(size,(fontWeights.get(size)||0)+l.text.replace(/\s/g,'').length);}
     const font=[...fontWeights].sort((a,b)=>b[1]-a[1])[0]?.[0]||12;
     const boundaries=new Map();
@@ -35,7 +36,7 @@ export function buildPDFChapters(source,{removeMargins=source.removeMargins!==fa
             const key=p.id+':'+index;if(!boundaries.has(key))boundaries.set(key,{title:item.title,replace:norm(p.lines[index].text)===norm(item.title)});
         }
         for(const p of pages)for(let i=0;i<(p.lines||[]).length;i++){
-            const l=p.lines[i],t=l.text.trim();if(!t||t.length>140||/\.{2,}\s*\d+\s*$/.test(t))continue;
+            const l=p.lines[i],t=l.text.trim();if(!t||t.length>140||/[.·_…\-–—]{2,}\s*\d+\s*$/.test(t))continue;
             const explicit=/^(?:cap[íi]tulo|chapter|parte|part|livro|book)\s+[\p{L}\d]/iu.test(t);
             const styled=l.size>font*1.2&&t.length<120&&!/[.!?;]$/.test(t)&&(!i||l.top-p.lines[i-1].top>font*1.3);
             if(explicit||styled||looksLikeHeading(t)){
@@ -64,7 +65,7 @@ export function buildPDFChapters(source,{removeMargins=source.removeMargins!==fa
 }
 export function mergeBooks(books){
     const first=books[0];if(!first)throw Error('Nenhum arquivo foi importado.');
-    const result={title:first.title,author:first.author||'',language:first.language||'pt-BR',fileName:first.fileName||first.title,cover:first.cover||null,coverOptions:[],chapters:[],sources:[],notes:[]};
+    const result={imagePreset:first.imagePreset||'balanced',title:first.title,author:first.author||'',language:first.language||'pt-BR',fileName:first.fileName||first.title,cover:first.cover||null,coverOptions:[],chapters:[],sources:[],notes:[]};
     for(const b of books){const offset=result.chapters.length;
         result.chapters.push(...b.chapters.map(c=>({...c,id:c.id||crypto.randomUUID(),html:sanitize(c.html.replace(/href="ch(\d+)\.xhtml/g,(_,n)=>`href="ch${Number(n)+offset}.xhtml`))})));
         result.sources.push(...b.sources||[]);result.notes.push(...b.notes||[]);if(!result.cover&&b.cover)result.cover=b.cover;

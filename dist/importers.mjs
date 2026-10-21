@@ -1,3 +1,6 @@
+import {capturePDFVisuals} from './pdf-visuals.mjs';
+import {optimizeBookImages,rasterizeSVG} from './media.mjs';
+import {formatChapterHTML,cleanTOCLabel} from './formatting.mjs';
 import {splitHTMLChapters,buildPDFChapters} from './structure.mjs';
 import {extractPDFLines,linesToText,cleanPDFMargins,pagesToHTML} from './pdf-layout.mjs';
 import {sanitize,parseHTML,escapeXML,textToHTML} from './book-tools.mjs';
@@ -47,14 +50,20 @@ export async function readEPUB(file,progress=()=>{}) {
     for(let i=0;i<paths.length;i++){
         progress(`Lendo capítulo ${i+1}/${paths.length}…`);
         const doc=parseHTML(await read(paths[i]));
+        // Resolve packaged SVG resources before rasterizing vector figures for Kindle.
+        for(const svg of [...doc.querySelectorAll('svg')])try{
+            for(const node of svg.querySelectorAll('image')){const href=node.getAttribute('href')||node.getAttribute('xlink:href');if(!href||href.startsWith('data:'))continue;const entry=zip.file(filePath(paths[i],href));if(!entry)throw Error();const bytes=await entry.async('uint8array'),type=imageType(bytes);if(!type)throw Error();node.setAttribute('href',await blobAsDataURL(new Blob([bytes],{type})));node.removeAttribute('xlink:href');}
+            const result=await rasterizeSVG(svg),img=doc.createElement('img');img.src=result.data;img.alt=svg.querySelector('title')?.textContent||'Ilustração';svg.replaceWith(img);
+        }catch{/* Simple raster wrappers have a second preservation path below. */}
         // Raster images are embedded locally; external URLs never reach the editor.
         for(const image of doc.querySelectorAll('img')){
             try{const src=image.getAttribute('src');if(!src)throw Error();if(src.startsWith('data:image/'))continue;
                 const path=filePath(paths[i],src);let data=images.get(path);
-                if(!data){const entry=zip.file(path);if(!entry)throw Error();const bytes=await entry.async('uint8array');const type=imageType(bytes);if(!type)throw Error();data=await blobAsDataURL(new Blob([bytes],{type}));images.set(path,data);}
+                if(!data){const entry=zip.file(path);if(!entry)throw Error();const bytes=await entry.async('uint8array');let type=imageType(bytes);if(!type&&/\.svg$/i.test(path)){const svg=xml(new TextDecoder().decode(bytes)).documentElement;data=(await rasterizeSVG(svg)).data;}else{if(!type)throw Error();data=await blobAsDataURL(new Blob([bytes],{type}));}images.set(path,data);}
                 image.setAttribute('src',data);
             }catch{image.removeAttribute('src');imagesSkipped++;}
         }
+        for(const svg of [...doc.querySelectorAll('svg')]){if(svg.querySelector('image'))continue;try{const result=await rasterizeSVG(svg);const img=doc.createElement('img');img.src=result.data;img.alt=svg.querySelector('title')?.textContent||'Ilustração';svg.replaceWith(img);}catch{imagesSkipped++;}}
         imagesSkipped+=doc.querySelectorAll('svg image').length;
         // Preserve the raster image inside common SVG cover wrappers, not SVG scripts.
         for(const image of [...doc.querySelectorAll('svg image')]){
@@ -114,24 +123,25 @@ export async function readPDF(file,progress=()=>{}) {
     pdfjsLib.GlobalWorkerOptions.workerSrc='./vendor/pdf.worker.min.js';
     const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
     try{
-        const pages=[],sourceID=crypto.randomUUID();let cover=null;
+        const pages=[],sourceID=crypto.randomUUID();let cover=null,visualWarnings=0;
         for(let n=1;n<=pdf.numPages;n++){
             progress(`Lendo página ${n}/${pdf.numPages}…`);
             const page=await pdf.getPage(n),content=await page.getTextContent(),viewport=page.getViewport({scale:1});
-            pages.push({id:crypto.randomUUID(),number:n,origin:file.name,height:viewport.height,width:viewport.width,lines:extractPDFLines(content.items,viewport),excluded:false});
+            let visuals=[];if(typeof document!=='undefined'&&!/jsdom/i.test(globalThis.navigator?.userAgent||''))try{visuals=await capturePDFVisuals(page,viewport,{lines:extractPDFLines(content.items,viewport)});}catch{visualWarnings++;}
+            pages.push({visuals,id:crypto.randomUUID(),number:n,origin:file.name,height:viewport.height,width:viewport.width,lines:extractPDFLines(content.items,viewport),excluded:false});
             if(n===1&&typeof document!=='undefined'&&!/jsdom/i.test(globalThis.navigator?.userAgent||''))try{
                 const canvas=document.createElement('canvas'),view=page.getViewport({scale:Math.min(1,800/viewport.height)});canvas.width=Math.ceil(view.width);canvas.height=Math.ceil(view.height);
                 await page.render({canvasContext:canvas.getContext('2d'),viewport:view,background:'white'}).promise;
                 cover={data:canvas.toDataURL('image/jpeg',.88),name:'Primeira página do PDF',kind:'pdf-page'};
             }catch{}
         }
-        if(pages.reduce((n,p)=>n+p.lines.reduce((m,l)=>m+l.text.trim().length,0),0)<15)throw Error('Este PDF não tem texto selecionável. Execute OCR antes de importar.');
+        if(!pages.some(p=>p.visuals.length)&&pages.reduce((n,p)=>n+p.lines.reduce((m,l)=>m+l.text.trim().length,0),0)<15)throw Error('Este PDF não tem texto selecionável. Execute OCR antes de importar.');
         const outline=[];
         const walk=async items=>{for(const item of items||[]){try{const dest=typeof item.dest==='string'?await pdf.getDestination(item.dest):item.dest;if(dest){const index=typeof dest[0]==='number'?dest[0]:await pdf.getPageIndex(dest[0]);if(pages[index])outline.push({title:item.title,pageId:pages[index].id,top:Number.isFinite(dest[3])?pages[index].height-dest[3]:null});}}catch{}await walk(item.items);}};
         await walk(await pdf.getOutline?.());
         const name=plainName(file),source={id:sourceID,name,pages,outline,removeMargins:true};
         const cleaned=buildPDFChapters(source),original=buildPDFChapters(source,{removeMargins:false});
-        return {title:name,fileName:name,cover,author:'',language:'pt-BR',chapters:cleaned.chapters,sources:[source],pdfAlternatives:{cleaned:cleaned.chapters,original:original.chapters,removed:cleaned.removed},notes:[`${pages.length} páginas de origem · ${outline.length} entradas no sumário · ${cleaned.chapters.length} seções detectadas. Confira a divisão antes de importar.`,`${cleaned.removed.length} elementos de margem detectados. As páginas de origem ficam disponíveis em Gerenciar páginas.`,'Imagens internas e a diagramação fixa do PDF não são importadas. A primeira página pode ser usada como capa.']};
+        return {title:name,fileName:name,cover,author:'',language:'pt-BR',chapters:cleaned.chapters,sources:[source],pdfAlternatives:{cleaned:cleaned.chapters,original:original.chapters,removed:cleaned.removed},notes:[`${pages.length} páginas de origem · ${outline.length} entradas no sumário · ${cleaned.chapters.length} seções detectadas. Confira a divisão antes de importar.`,`${cleaned.removed.length} elementos de margem detectados. As páginas de origem ficam disponíveis em Gerenciar páginas.`,`${pages.reduce((n,p)=>n+p.visuals.length,0)} blocos visuais preservados e otimizados. Tabelas e gráficos de PDF são imagens; confira a legibilidade na prévia.${visualWarnings?' Atenção: falha na captura visual de '+visualWarnings+' página(s); confira o original.':''}`]};
     }finally{await pdf.destroy();}
 }
 export async function importFile(file,progress) {
@@ -143,29 +153,30 @@ export async function importFile(file,progress) {
     if(ext==='txt')return {title:plainName(file),author:'',language:'pt-BR',chapters:splitHTMLChapters(textToHTML(await file.text()),{name:plainName(file)}),notes:['Quebras de linha foram tratadas como texto contínuo; linhas vazias delimitam parágrafos.']};
     throw Error('Selecione PDF, TXT, EPUB, MOBI, AZW ou AZW3.');
 }
-export async function createEPUB(book) {
+export async function createEPUB(book,options={}) {
     if(!globalThis.JSZip)throw Error('O exportador não carregou. Recarregue a página.');
     const {toXHTML,readingCSS}=await import('./book-tools.mjs');
+    const optimized=await optimizeBookImages(book,options);book=optimized.book;options.onStats?.(optimized.stats);
     const zip=new JSZip(),images=new Map(),chapters=[];let imageIndex=0;
     const exportChapters=book.chapters.filter(c=>!(book.cover&&c.isCover));
     const exportBook={...book,chapters:exportChapters};book=exportBook;
     const destinations=new Map();book.chapters.forEach((c,i)=>{for(const e of parseHTML(c.html).querySelectorAll('[id]'))if(!destinations.has(e.id))destinations.set(e.id,i);});
 
     zip.file('mimetype','application/epub+zip',{compression:'STORE'});
-    for(const chapter of book.chapters){const doc=parseHTML(sanitize(chapter.html));
+    for(const chapter of book.chapters){const doc=parseHTML(formatChapterHTML(chapter.html,{name:chapter.name,chapters:book.chapters}));
         for(const a of doc.querySelectorAll('a[href]')){const href=a.getAttribute('href'),fragment=href.includes('#')?href.slice(href.indexOf('#')+1):'';if(fragment&&destinations.has(fragment))a.setAttribute('href',`ch${destinations.get(fragment)}.xhtml#${fragment}`);}
-for(const img of doc.querySelectorAll('img')){const data=img.getAttribute('src');let asset=images.get(data);if(!asset){const m=data.match(/^data:image\/(png|jpeg|gif|webp);base64,([\s\S]+)$/i);if(!m)continue;asset={path:`images/image${++imageIndex}.${m[1]==='jpeg'?'jpg':m[1]}`,type:`image/${m[1]}`,id:`img${imageIndex}`};zip.file('OEBPS/'+asset.path,m[2],{base64:true});images.set(data,asset);}img.setAttribute('src',data);img.setAttribute('data-export-src',asset.path);}
+for(const img of doc.querySelectorAll('img')){const data=img.getAttribute('src');let asset=images.get(data);if(!asset){const m=data.match(/^data:image\/(png|jpeg|gif|webp);base64,([\s\S]+)$/i);if(!m)continue;asset={path:`images/image${++imageIndex}.${m[1]==='jpeg'?'jpg':m[1]}`,type:`image/${m[1]}`,id:`img${imageIndex}`};zip.file('OEBPS/'+asset.path,m[2],{base64:true,compression:'STORE'});images.set(data,asset);}img.setAttribute('src',data);img.setAttribute('data-export-src',asset.path);}
         // toXHTML only allows embedded images; replace their serialized source afterwards.
         let content=toXHTML(doc.body.innerHTML);for(const [data,asset]of images)content=content.split(escapeXML(data)).join(asset.path);chapters.push(content);
     }
     let coverAsset=null;
-    if(book.cover?.data){const m=book.cover.data.match(/^data:image\/(png|jpeg|gif|webp);base64,([\s\S]+)$/i);if(m){coverAsset={path:'images/cover.'+(m[1]==='jpeg'?'jpg':m[1]),type:'image/'+m[1]};zip.file('OEBPS/'+coverAsset.path,m[2],{base64:true});zip.file('OEBPS/cover.xhtml',`<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Capa</title><style>body{margin:0;text-align:center}img{max-width:100%;max-height:95vh;height:auto}</style></head><body><div><img src="${coverAsset.path}" alt="Capa de ${escapeXML(book.title)}"/></div></body></html>`);}}
+    if(book.cover?.data){const m=book.cover.data.match(/^data:image\/(png|jpeg|gif|webp);base64,([\s\S]+)$/i);if(m){coverAsset={path:'images/cover.'+(m[1]==='jpeg'?'jpg':m[1]),type:'image/'+m[1]};zip.file('OEBPS/'+coverAsset.path,m[2],{base64:true,compression:'STORE'});zip.file('OEBPS/cover.xhtml',`<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Capa</title><style>body{margin:0;text-align:center}img{max-width:100%;max-height:95vh;height:auto}</style></head><body><div><img src="${coverAsset.path}" alt="Capa de ${escapeXML(book.title)}"/></div></body></html>`);}}
     const lang=/^[a-z]{2,3}(?:-[a-zA-Z0-9]+)*$/.test(book.language||'')?book.language:'pt-BR';
     zip.file('mimetype','application/epub+zip',{compression:'STORE'});
     zip.file('META-INF/container.xml','<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
     zip.file('OEBPS/style.css',readingCSS);
     chapters.forEach((html,i)=>zip.file(`OEBPS/ch${i}.xhtml`,`<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" lang="${lang}" xml:lang="${lang}"><head><title>${escapeXML(book.chapters[i].name)}</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body>${html}</body></html>`));
-    zip.file('OEBPS/nav.xhtml','<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="'+lang+'"><head><title>Sumário</title></head><body><nav epub:type="toc" id="toc"><h1>Sumário</h1><ol>'+book.chapters.map((c,i)=>`<li><a href="ch${i}.xhtml">${escapeXML(c.name)}</a></li>`).join('')+'</ol></nav></body></html>');
+    zip.file('OEBPS/nav.xhtml','<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="'+lang+'"><head><title>Sumário</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body><nav epub:type="toc" id="toc"><h1>Sumário</h1><ol>'+book.chapters.map((c,i)=>`<li><a href="ch${i}.xhtml">${escapeXML(cleanTOCLabel(c.name))}</a></li>`).join('')+'</ol></nav></body></html>');
     zip.file('OEBPS/content.opf',`<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="book-id">urn:uuid:${crypto.randomUUID()}</dc:identifier><dc:title>${escapeXML(book.title||'Meu livro')}</dc:title><dc:creator>${escapeXML(book.author||'Autor desconhecido')}</dc:creator><dc:language>${lang}</dc:language>${coverAsset?'<meta name="cover" content="cover-image"/>':''}<meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d{3}Z$/,'Z')}</meta></metadata><manifest>${coverAsset?`<item id="cover-image" href="${coverAsset.path}" media-type="${coverAsset.type}" properties="cover-image"/><item id="cover-page" href="cover.xhtml" media-type="application/xhtml+xml"/>`:``}<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/>${book.chapters.map((c,i)=>`<item id="ch${i}" href="ch${i}.xhtml" media-type="application/xhtml+xml"/>`).join('')}${[...images.values()].map(a=>`<item id="${a.id}" href="${a.path}" media-type="${a.type}"/>`).join('')}</manifest><spine>${coverAsset?'<itemref idref="cover-page"/>':''}${book.chapters.map((c,i)=>`<itemref idref="ch${i}"/>`).join('')}</spine></package>`);
     return zip.generateAsync({type:'uint8array',mimeType:'application/epub+zip',compression:'DEFLATE'});
 }

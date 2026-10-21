@@ -2,19 +2,22 @@
 export const escapeXML = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 export const parseHTML = html => new DOMParser().parseFromString(html, 'text/html');
 const blocks = 'p,div,h1,h2,h3,h4,h5,h6,blockquote,pre,li,table,figure,hr';
-const allowed = new Set('p div h1 h2 h3 h4 h5 h6 strong b em i u s br blockquote ul ol li span pre code sup sub hr a img figure figcaption table thead tbody tr th td'.split(' '));
+const allowed = new Set('p div h1 h2 h3 h4 h5 h6 strong b em i u s br blockquote ul ol li span pre code sup sub hr a img figure figcaption table caption colgroup col tfoot thead tbody tr th td'.split(' '));
 export function sanitize(html) {
     const doc = parseHTML(html);
     doc.querySelectorAll('script,style,iframe,object,embed,svg,math,form,input,button,link,meta,base').forEach(e => e.remove());
     for (const e of [...doc.body.querySelectorAll('*')].reverse()) {
         const tag = e.localName;
         if (!allowed.has(tag)) { e.replaceWith(...e.childNodes); continue; }
+        const spans={colspan:e.getAttribute('colspan'),rowspan:e.getAttribute('rowspan')},toc=e.getAttribute('data-toc');
         const align = e.style.textAlign || e.getAttribute('align');
         const id = e.id, href = e.getAttribute('href'), src = e.getAttribute('src'), alt = e.getAttribute('alt');
         const keepLines = e.getAttribute('data-keep-lines') === 'true' || /^(pre|pre-wrap|break-spaces)$/.test(e.style.whiteSpace);
         const className = /(?:^|[\s_-])(verse|poem|poetry|verso|poesia)(?:$|[\s_-])/i.test(e.className) ? 'verse' : '';
         [...e.attributes].forEach(a => e.removeAttribute(a.name));
         if (id) e.id = id;
+        if(toc==='true')e.setAttribute('data-toc','true');
+        if(['td','th'].includes(tag))for(const [k,v]of Object.entries(spans))if(/^[1-9]\d?$/.test(v||''))e.setAttribute(k,v);
         if (['left','right','center','justify'].includes(align)) e.style.textAlign = align;
         if (keepLines || className) e.setAttribute('data-keep-lines', 'true');
         if (tag === 'a' && href && /^(#|ch\d+\.xhtml(?:#|$))/.test(href)) e.setAttribute('href', href);
@@ -34,24 +37,24 @@ export function toXHTML(html) {
         const tag = n.localName;
         const attrs = [...n.attributes].filter(a => a.name !== 'data-keep-lines').map(a => ` ${a.name}="${escapeXML(a.value)}"`).join('');
         const preserve = n.hasAttribute('data-keep-lines') && tag !== 'pre' ? ' class="verse"' : '';
-        return `<${tag}${attrs}${preserve}` + (/^(br|hr|img)$/.test(tag) ? ' />' : `>${[...n.childNodes].map(serialize).join('')}</${tag}>`);
+        return `<${tag}${attrs}${preserve}` + (/^(br|hr|img|col)$/.test(tag) ? ' />' : `>${[...n.childNodes].map(serialize).join('')}</${tag}>`);
     }
     return [...doc.body.childNodes].map(serialize).join('');
 }
 export const readingCSS = `
-body{font-family:serif;line-height:1.55;margin:0 5%;padding:0;overflow-wrap:break-word;}
-p{margin:0 0 .6em;text-indent:0;white-space:normal;}p+p{text-indent:1.2em;}
-h1,h2,h3,h4,h5,h6{line-height:1.25;text-indent:0;break-after:avoid;page-break-after:avoid;margin:1.3em 0 .8em;}
-h1{font-size:1.65em;}h2{font-size:1.3em;}h3{font-size:1.15em;}
-blockquote{margin:1em 1.2em;}blockquote p{ text-indent:0; }
-img{max-width:100%;height:auto;}figure{margin:1em 0;text-align:center;}figcaption{font-size:.85em;}
-pre,.verse{white-space:pre-wrap;text-indent:0;}table{max-width:100%;border-collapse:collapse;}td,th{padding:.3em;}
-hr{width:30%;margin:1.8em auto;}a{color:inherit;}
+body{font-family:serif;line-height:1.5;margin:0 4%;padding:0;overflow-wrap:break-word;text-align:justify;}
+body *{font-family:inherit;}p{margin:0 0 .65em;text-indent:0;white-space:normal;}p+p{text-indent:1.2em;}
+h1,h2,h3,h4,h5,h6{line-height:1.25;text-align:left;text-indent:0;break-after:avoid;page-break-after:avoid;margin:1.3em 0 .8em;}h1{font-size:1.65em;}h2{font-size:1.3em;}h3{font-size:1.15em;}
+blockquote{margin:1em;}blockquote p{ text-indent:0; }
+img{display:block;max-width:100%;max-height:95vh;width:auto;height:auto;margin:.6em auto;object-fit:contain;}figure{margin:1em 0;text-align:center;break-inside:avoid;page-break-inside:avoid;}figcaption,caption{text-align:center;font-size:.85em;text-indent:0;}
+pre,.verse{white-space:pre-wrap;text-indent:0;text-align:left;}table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;font-size:.9em;margin:1em auto;}td,th{padding:.3em;border:1px solid #999;overflow-wrap:anywhere;text-align:left;vertical-align:top;}td p,th p{text-indent:0;}
+nav,[data-toc]{text-align:left;}[data-toc] p,[data-toc] li{text-indent:0;margin:.5em 0;}nav ol,[data-toc]{padding-left:1.2em;}a{color:inherit;}hr{width:30%;margin:1.8em auto;}
 `;
 const terminal = s => /[.!?…:;][”’"')\]]?\s*$/.test(s);
 const dialogue = s => /^\s*[—–-]\s*\S/.test(s);
 export function looksLikeHeading(text) {
     const s = text.trim();
+    if (/[.·_…\-–—]{3,}\s*\d+\s*$/.test(s))return false;
     if (!s || s.length > 100 || terminal(s) || dialogue(s)) return false;
     return /^(cap[íi]tulo|chapter|parte|part|livro|book)\s+([\divxlcdm]+|[\p{L}-]+)(\s|[.:—–-]|$)/iu.test(s)
         || (s.length < 72 && /\p{Lu}/u.test(s) && s === s.toLocaleUpperCase() && s.split(/\s+/).length <= 10);
@@ -222,6 +225,6 @@ export function validateBook(data) {
     if (!data || typeof data.title !== 'string' || !Array.isArray(data.chapters) || !data.chapters.length || data.chapters.length > 5000 || data.chapters.some(c=>typeof c.name!=='string'||typeof c.html!=='string')) throw Error('Arquivo de livro inválido.');
     const image=/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i;
     const sources=Array.isArray(data.sources)?data.sources.filter(s=>typeof s.id==='string'&&Array.isArray(s.pages)).map(s=>({...s,name:String(s.name||'PDF'),pages:s.pages.map(p=>({...p,id:String(p.id||crypto.randomUUID()),lines:Array.isArray(p.lines)?p.lines:[],...(p.manualHTML!==undefined?{manualHTML:sanitize(String(p.manualHTML))}:{})})),outline:Array.isArray(s.outline)?s.outline:[]})):[];
-    return {title:data.title,author:String(data.author||''),fileName:String(data.fileName||data.title),cover:data.cover&&image.test(data.cover.data||'')?{data:data.cover.data,name:String(data.cover.name||'Capa'),kind:String(data.cover.kind||'image')}:null,coverOptions:Array.isArray(data.coverOptions)?data.coverOptions.filter(c=>image.test(c?.data||'')):[],sources,language:/^[a-z]{2,3}(?:-[a-zA-Z0-9]+)*$/.test(data.language||'')?data.language:'pt-BR',chapters:data.chapters.map(c=>({id:String(c.id||crypto.randomUUID()),...(c.sourceId?{sourceId:String(c.sourceId)}:{}),...(c.isCover?{isCover:true}:{}),name:c.name,html:sanitize(c.html)}))};
+    return {imagePreset:['light','balanced','detailed'].includes(data.imagePreset)?data.imagePreset:'balanced',title:data.title,author:String(data.author||''),fileName:String(data.fileName||data.title),cover:data.cover&&image.test(data.cover.data||'')?{data:data.cover.data,name:String(data.cover.name||'Capa'),kind:String(data.cover.kind||'image')}:null,coverOptions:Array.isArray(data.coverOptions)?data.coverOptions.filter(c=>image.test(c?.data||'')):[],sources,language:/^[a-z]{2,3}(?:-[a-zA-Z0-9]+)*$/.test(data.language||'')?data.language:'pt-BR',chapters:data.chapters.map(c=>({id:String(c.id||crypto.randomUUID()),...(c.sourceId?{sourceId:String(c.sourceId)}:{}),...(c.isCover?{isCover:true}:{}),name:c.name,html:sanitize(c.html)}))};
 }
 

@@ -1,4 +1,4 @@
-import {textToHTML,looksLikeHeading} from './book-tools.mjs';
+import {escapeXML,textToHTML,looksLikeHeading} from './book-tools.mjs';
 const median = a => [...a].sort((x,y)=>x-y)[Math.floor(a.length/2)] || 12;
 export function extractPDFLines(items,viewport) {
     const lines=[];let current;
@@ -7,9 +7,9 @@ export function extractPDFLines(items,viewport) {
         const [x,top]=viewport?.convertToViewportPoint ? viewport.convertToViewportPoint(item.transform[4],item.transform[5]) : [item.transform[4],-item.transform[5]];
         const size=Math.max(Math.hypot(item.transform[2],item.transform[3]),item.height||0,1);
         if(!current||Math.abs(top-current.top)>Math.max(2,size*.3)){
-            current={x,top,size,text:item.str};lines.push(current);
+            current={x,top,size,text:item.str,cells:[]};lines.push(current);
         }else{const gap=x-current.endX;current.text+=(gap>size*.15?' ':'')+item.str;current.size=Math.max(current.size,size);}
-        current.endX=x+(item.width||0);
+        current.endX=x+(item.width||0);current.cells.push({x,endX:current.endX,text:item.str,size,top});
     }
     return lines;
 }
@@ -45,11 +45,12 @@ export function linesToText(lines) {
     const font=median(lines.map(l=>l.size)),gaps=lines.slice(1).map((l,i)=>Math.abs(l.top-lines[i].top)).filter(g=>g>font*.6&&g<font*3);
     const lineGap=median(gaps),minX=Math.min(...lines.map(l=>l.x));
     let out='';
-    lines.forEach((l,i)=>{const prev=lines[i-1];const boundary=prev&&(Math.abs(l.top-prev.top)>lineGap*1.4||l.x-minX>font*1.2&&prev.x-minX<font*.7||l.size>font*1.2||prev.size>font*1.2);out+=(i?(boundary?'\n\n':'\n'):'')+l.text;});return out;
+    lines.forEach((l,i)=>{const prev=lines[i-1];const boundary=prev&&(/[.·_…\-–—]{3,}\s*\d+\s*$/.test(l.text)||/[.·_…\-–—]{3,}\s*\d+\s*$/.test(prev.text)||/^(sum[áa]rio|[íi]ndice|contents)$/i.test(prev.text.trim())||Math.abs(l.top-prev.top)>lineGap*1.4||l.x-minX>font*1.2&&prev.x-minX<font*.7||l.size>font*1.2||prev.size>font*1.2);out+=(i?(boundary?'\n\n':'\n'):'')+l.text;});return out;
 }
 export function pagesToHTML(pages) {
-    let text='';let previous;
-    for(const page of pages){if(!page.lines.length)continue;
+    let text='';let previous;const visuals=[];
+    for(let page of pages){if(!page.lines.length)continue;
+        const prepared=page.lines.map(l=>{if(!l.visual)return l;const token='visualblock'+visuals.length+'end';visuals.push(l.visual);return {...l,text:'\n\n'+token+'\n\n'};});page={...page,lines:prepared};
         const first=page.lines[0],last=page.lines.at(-1),font=median(page.lines.map(l=>l.size)),minX=Math.min(...page.lines.map(l=>l.x));
         // Page edges are not paragraph edges. Continue unfinished sentences and
         // hyphenated words unless the next page provides a new paragraph/title cue.
@@ -58,5 +59,5 @@ export function pagesToHTML(pages) {
         const continuation=previous&&!/[.!?…:;][”’"')\]]?\s*$/.test(previous.text)&&!heading&&!indent&&!/^\s*[—–-]\s*\S/.test(first.text);
         text+=(text?(continuation?'\n':'\n\n'):'')+linesToText(page.lines);previous=last;
     }
-    return textToHTML(text,{reconstruct:true});
+    let html=textToHTML(text,{reconstruct:true});visuals.forEach((v,i)=>{html=html.replace(new RegExp('<p>\\s*visualblock'+i+'end\\s*</p>','g'),'<figure><img src="'+escapeXML(v.data)+'" alt="'+escapeXML(v.alt||'Ilustração')+'" /></figure>');});return html;
 }
