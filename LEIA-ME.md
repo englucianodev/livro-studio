@@ -92,3 +92,9 @@ A interface removeu a opção de idioma e os blocos de dicas e envio ao Kindle. 
 - Desfazer exclusão restaura a última exclusão enquanto não houver novas alterações de conteúdo, reorganização ou troca do documento. O recurso evita reverter silenciosamente edições posteriores. Faça backups antes de alterações extensas. Os PDFs originais armazenados como fontes não são alterados; reconstruir suas páginas pode recuperar conteúdo do original.
 - Arraste a divisória vertical entre o menu e o documento para mudar a largura lateral. Arraste as divisórias horizontais para ajustar dados do livro, capítulos, importação, ferramentas e miniaturas. As áreas menores têm rolagem para manter seus controles acessíveis. As janelas de ferramentas também aceitam redimensionamento pelo canto quando o navegador permite.
 - Os tamanhos ficam salvos neste navegador. Dois cliques em uma divisória restauram aquele painel. Restaurar tamanho dos painéis, ao final do menu lateral, retorna todo o layout ao padrão. As divisórias também respondem às setas do teclado quando estão focadas. No celular o menu se adapta à largura disponível.
+
+## Novidades na interface e exportação
+
+O botão **Exportar livro** oferece EPUB, HTML e TXT para download. A opção PDF abre a impressão do navegador: selecione **Salvar como PDF** como destino. HTML mantém a formatação e as imagens; TXT contém somente texto. O backup JSON continua disponível para retomar a edição.
+
+A interface tem controles mais compactos e uma área maior para o livro. **Mais ferramentas** abre os recursos adicionais, **Miniaturas** exibe a navegação visual e **Modo foco** recolhe o menu lateral. Pressione Esc para sair do foco. O zoom inicial aproveita a largura disponível; os controles de zoom e Ajustar largura permitem personalizar a visualização.

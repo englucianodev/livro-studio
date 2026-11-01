@@ -1,3 +1,5 @@
+import {installWorkspace} from './workspace-ui.mjs';
+import {installExportFormats} from './export-formats.mjs';
 import {installPageEditor} from './page-editor.mjs';
 import {installResizableLayout} from './resizable-layout.mjs';
 import {installReader} from './reader.mjs';
@@ -9,7 +11,7 @@ import {sanitize,escapeXML as esc,organizeHTML,textToHTML,validateBook,readingCS
 import {importFile,createEPUB} from './importers.mjs';
 const $=id=>document.getElementById(id);
 const mediaOptions=document.createElement('label');mediaOptions.style.cssText='display:block;margin:12px 0;font-size:12px';mediaOptions.innerHTML='Imagens no EPUB<select id="imagepreset" aria-label="Qualidade das imagens" style="display:block;width:100%;margin-top:6px;padding:8px"><option value="light">Leve · arquivos menores</option><option value="balanced" selected>Equilibrado · recomendado</option><option value="detailed">Mais detalhes · arquivo maior</option></select><small>Texto justificado e fonte uniforme. Figuras centralizadas; tabelas de PDF preservadas como imagens. Reimporte PDFs antigos para recuperar figuras.</small>';$('covermanager').closest('.covercard').before(mediaOptions);
-const initial=()=>({title:'Meu primeiro livro',author:'',language:'pt-BR',chapters:[{name:'Primeiras páginas',html:'<h1>Um novo capítulo começa aqui.</h1><p>Todo livro começa com uma ideia. Uma frase que ficou na memória, um texto que merece ser relido ou uma história esperando para ganhar forma.</p><p>Este é o seu espaço para reunir essas palavras. Você pode escrever aqui, colar trechos ou importar um PDF, EPUB, MOBI ou AZW sem DRM para começar.</p><blockquote>Há sempre um livro esperando para nascer das palavras que guardamos.</blockquote><h2>Uma leitura que acompanha você</h2><p>Organize suas ideias em capítulos e use Organizar texto para revisar quebras de linha e parágrafos. Quando estiver pronto, exporte em EPUB para enviar ao Kindle.</p>'}]});
+const initial=()=>({title:'Meu primeiro livro',author:'',language:'pt-BR',chapters:[{name:'Primeiras páginas',html:'<h1>Um novo capítulo começa aqui.</h1><p>Todo livro começa com uma ideia. Uma frase que ficou na memória, um texto que merece ser relido ou uma história esperando para ganhar forma.</p><p>Este é o seu espaço para reunir essas palavras. Você pode escrever aqui, colar trechos ou importar um PDF, EPUB, MOBI ou AZW sem DRM para começar.</p><blockquote>Há sempre um livro esperando para nascer das palavras que guardamos.</blockquote><h2>Uma leitura que acompanha você</h2><p>Organize suas ideias em capítulos e use Organizar texto para revisar quebras de linha e parágrafos. Quando estiver pronto, exporte em EPUB, PDF, HTML ou TXT para compartilhar sua história.</p>'}]});
 let pendingImports=[],importBusy=false;
 let book=initial(),active=0,db=null,persistTimer,revision=0,pendingImport=null,organization=null,undoOrganization=null,undoFingerprint='';
 function toast(t){$('toast').textContent=t;$('toast').style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('toast').style.display='none',6500);}
@@ -31,7 +33,7 @@ $('editor').addEventListener('paste',e=>{e.preventDefault();document.execCommand
 $('paste').onclick=()=>$('pastedialog').showModal();$('insertpaste').onclick=()=>{const text=$('pastetext').value;if(!text.trim())return;$('pastedialog').close();editorTools.insertHTML(textToHTML(text,{reconstruct:false,headings:false}));$('pastetext').value='';$('pastedialog').close();};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 function download(blob,name){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
-const filename=()=>(book.fileName||book.title).replace(/\.(epub|pdf|azw3?|mobi|txt|json)$/i,'').replace(/[^\p{L}\p{N} _-]/gu,'').trim()||'meu-livro';
+const filename=()=>(book.fileName||book.title).replace(/\.(epub|pdf|azw3?|mobi|txt|html|json)$/i,'').replace(/[^\p{L}\p{N} _-]/gu,'').trim()||'meu-livro';
 $('backup').onclick=()=>{capture();download(new Blob([JSON.stringify(book,null,2)],{type:'application/json'}),filename()+'.json');};
 $('backupbeforeimport').onclick=()=>$('backup').click();
 function invalidateUndo(){undoOrganization=null;$('undoorganize').disabled=true;}
@@ -104,7 +106,7 @@ for(const id of ['organizescope','reconstruct','repairhyphens','detectheadings',
 $('artifactphrases').oninput=previewOrganization;
 $('applyorganize').onclick=()=>{if(!organization)return;capture();undoOrganization=structuredClone(book);for(const r of organization)book.chapters[r.i].html=r.html;render();save();undoFingerprint=JSON.stringify(book);$('undoorganize').disabled=false;$('organizedialog').close();toast('Organização aplicada. Confira a prévia de leitura; você pode desfazer a última organização.');};
 $('undoorganize').onclick=()=>{if(!undoOrganization)return;capture();if(JSON.stringify(book)!==undoFingerprint&&!confirm('Desfazer a última operação também reverte as edições feitas depois dela. Continuar?'))return;book=undoOrganization;active=Math.min(active,book.chapters.length-1);invalidateUndo();render();save();toast('Estado anterior restaurado.');};
-$('export').onclick=async()=>{const btn=$('export');btn.disabled=true;btn.textContent='Preparando EPUB…';try{capture();let stats;const bytes=await createEPUB(book,{progress:message=>btn.textContent=message,onStats:value=>stats=value});download(new Blob([bytes],{type:'application/epub+zip'}),filename()+'.epub');toast('EPUB exportado: '+(bytes.length/1048576).toFixed(2)+' MB · '+(stats?.images||0)+' imagens. '+(stats?.warnings.length?'Algumas imagens mantiveram a qualidade original; não foi possível otimizá-las.':'Imagens otimizadas e texto adaptável.'));}catch(err){toast('Exportação: '+err.message);}finally{btn.disabled=false;btn.textContent='↓ Exportar EPUB';}};
+$('export').onclick=async()=>{const btn=$('export');btn.disabled=true;btn.textContent='Preparando EPUB…';try{capture();let stats;const bytes=await createEPUB(book,{progress:message=>btn.textContent=message,onStats:value=>stats=value});download(new Blob([bytes],{type:'application/epub+zip'}),filename()+'.epub');toast('EPUB exportado: '+(bytes.length/1048576).toFixed(2)+' MB · '+(stats?.images||0)+' imagens. '+(stats?.warnings.length?'Algumas imagens mantiveram a qualidade original; não foi possível otimizá-las.':'Imagens otimizadas e texto adaptável.'));}catch(err){toast('Exportação: '+err.message);}finally{btn.disabled=false;btn.textContent='↓ Exportar livro';}};
 // The same flowing paragraph stylesheet drives the previews and the EPUB.
 const previewStyle=document.createElement('style');previewStyle.textContent=readingCSS.replace(/(^|\})\s*([^{}]+)\{/g,(_,boundary,selectors)=>boundary+selectors.split(',').map(s=>'.reading '+(s.trim()==='body'?'':s.trim().replace(/^body\s+/, ''))).join(',')+'{');document.head.append(previewStyle);
 function applyBook(next,index=active){capture();undoOrganization=structuredClone(book);book=validateBook(next);active=Math.min(index,book.chapters.length-1);render();save();undoFingerprint=JSON.stringify(book);$('undoorganize').disabled=false;}
@@ -113,8 +115,8 @@ const editorTools=installEditorTools({save,toast});
 const reader=installReader({getBook:()=>{capture();return book;},onEdit:index=>{save();active=index;render();},toast});
 const pageEditing=installPageEditor({getBook:()=>book,onCommit:next=>{book=next;active=Math.min(active,book.chapters.length-1);$('editor').innerHTML=sanitize(book.chapters[active].html);renderChapterList();editionUI?.render();},onActive:index=>{active=index;$('editor').innerHTML=sanitize(book.chapters[active].html);$('current').textContent=book.chapters[active].name;document.querySelectorAll('#chapters .chapter').forEach((row,i)=>row.classList.toggle('active',i===active));},tools:editorTools,save,toast});
 installResizableLayout();
+installExportFormats({getBook:()=>{capture();return book;},download,filename,exportEPUB:$('export').onclick,toast});
+installWorkspace();
 async function boot(){try{db=await openDB();const data=await databaseRead();if(data)book=validateBook(data);else{try{const old=JSON.parse(localStorage.getItem('livrostudio-v1'));if(old)book=validateBook(old);}catch{}await databaseWrite(book);}}catch{db=null;try{const old=JSON.parse(localStorage.getItem('livrostudio-v1'));if(old)book=validateBook(old);}catch{}$('saved').textContent='Armazenamento limitado — use backups';}render();$('loading').remove();}
 boot();
 window.addEventListener('pagehide',()=>{capture();clearTimeout(persistTimer);persist(structuredClone(book),revision);});
-
-
