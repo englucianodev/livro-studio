@@ -96,7 +96,7 @@ A interface removeu a opção de idioma e os blocos de dicas e envio ao Kindle. 
 
 ## Novidades na interface e exportação
 
-O botão **Exportar livro** oferece DOCX, DOC, EPUB, HTML e TXT para download. A opção PDF abre a impressão do navegador: selecione **Salvar como PDF** como destino. HTML mantém a formatação e as imagens; TXT contém somente texto. O backup JSON continua disponível para retomar a edição.
+O botão **Exportar livro** oferece DOCX, DOC, EPUB, HTML e TXT para download. A opção PDF abre a impressão do navegador: selecione **Salvar como PDF** como destino. HTML mantém a formatação e as imagens; TXT contém somente texto. O projeto é salvo automaticamente neste navegador.
 
 A interface tem controles mais compactos e uma área maior para o livro. **Mais ferramentas** abre os recursos adicionais, **Miniaturas** exibe a navegação visual e **Modo foco** recolhe o menu lateral. Pressione Esc para sair do foco. O zoom inicial aproveita a largura disponível; os controles de zoom e Ajustar largura permitem personalizar a visualização.
 
@@ -108,6 +108,15 @@ As conversões acontecem no navegador, inclusive na versão estática hospedada:
 
 DOCX é o formato recomendado. O DOC gerado é um arquivo binário Word 97–2003 válido. Texto Unicode, formatação básica, listas, tabelas simples e imagens PNG/JPEG são preservados; GIF/WebP são convertidos para PNG na exportação. A capa e o início de cada capítulo também são incluídos. Revise paginação, notas e elementos complexos após a conversão. DOC antigo anterior ao Word 97, arquivos com senha, macros, objetos incorporados e imagens vetoriais WMF/EMF não têm suporte. No DOC, a importação utiliza o corpo do documento; cabeçalhos, rodapés e comentários não integram o livro.
 
-O limite de importação continua em 80 MB por arquivo. O exportador DOC tem limite de cerca de 7 MB; quando excedido, o editor orienta a exportar em DOCX. Células mescladas precisam ser desfeitas antes de exportar para Word. O backup JSON preserva o projeto editável completo.
+O limite de importação continua em 80 MB por arquivo. O exportador DOC tem limite de cerca de 7 MB; quando excedido, o editor orienta a exportar em DOCX. Células mescladas precisam ser desfeitas antes de exportar para Word. O projeto editável permanece salvo neste navegador.
 
 Para desenvolvimento, execute `npm ci`, `npm run build:word` e `npm test`. O comando de build atualiza apenas o módulo Word e as licenças. O aplicativo continua iniciando sem instalar dependências. A verificação opcional `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-word.ps1` abre as amostras criadas pelos testes em uma instância oculta do Word instalado, confere texto, tabelas e imagens e encerra essa instância.
+
+
+## Margens e área de trabalho compacta
+
+Em Configurações do livro, escolha Margens laterais no EPUB: Nenhuma (padrão), Pequena (2%) ou Normal (4%). A preferência fica salva com o projeto e é aplicada nas próximas exportações EPUB. O Kindle também controla suas próprias margens; envie novamente o EPUB após alterar essa opção.
+
+Os comandos de salvar e abrir backup JSON foram removidos da interface, inclusive na importação. As referências a backups nas seções históricas acima descrevem versões anteriores. O salvamento automático no navegador continua ativo; exporte o livro antes de criar outro se quiser guardar seu conteúdo.
+
+Criar outro livro fica destacado abaixo das configurações. Organizar texto e Desfazer última operação ficam junto às guias de edição e leitura. A formatação vem antes dos controles de página na mesma linha, com rolagem horizontal quando necessário. A janela Colar um trecho ocupa até 90% da altura da tela e redistribui textos longos em páginas após a inserção.

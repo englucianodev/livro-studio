@@ -5,9 +5,20 @@ import JSZip from 'jszip';
 import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {createWord,readWord} from '../dist/word-formats.mjs';
-import {importFile} from '../dist/importers.mjs';
+import {importFile,createEPUB} from '../dist/importers.mjs';
+import {validateBook} from '../dist/book-tools.mjs';
+import {mergeBooks} from '../dist/structure.mjs';
 const require=createRequire(import.meta.url);
 const docToText=require('../dist/vendor/docToText.cjs');
+test('EPUB aplica cada margem e mantém a preferência ao validar e reunir livros',async()=>{
+ for(const [marginPreset,margin] of [['none','0'],['small','2%'],['normal','4%']]){
+  const sample=validateBook({title:'Margens',marginPreset,chapters:[{name:'Texto',html:'<p>Texto de exemplo.</p>'}]});
+  assert.equal(mergeBooks([sample,sample]).marginPreset,marginPreset);
+  const zip=await JSZip.loadAsync(await createEPUB(sample));
+  assert.ok((await zip.file('OEBPS/style.css').async('string')).includes(`margin:0 ${margin};`));
+ }
+ assert.equal(validateBook({title:'Antigo',chapters:[{name:'Texto',html:'<p>Texto</p>'}]}).marginPreset,'none');
+});
 const pixel='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
 const book={title:'Histórias & descobertas',author:'João da Conceição',language:'pt-BR',cover:{data:pixel},chapters:[
  {name:'Capítulo 1',html:'<h1>Capítulo 1 — Olá, mundo 🌎</h1><p>Texto com <strong>negrito</strong>, <em>itálico</em>, <u>sublinhado</u> e ação.</p><p><span data-editor-format="true" style="color:#7144ed">Violeta</span><br>Outra linha</p><ul><li>Uma ideia<ul><li>Ideia filha</li></ul></li><li>Outra ideia</li></ul><ol><li>Primeiro</li><li>Segundo</li></ol><table><tr><th>Nome</th><th>Valor</th></tr><tr><td>Maçã</td><td>20</td></tr><tr><td></td><td>Vazio à esquerda</td></tr></table><p><img alt="Exemplo" src="'+pixel+'"></p>'},

@@ -18,3 +18,25 @@ dialog{border:1px solid #e8e0f8;box-shadow:0 24px 100px #23103f33;border-radius:
 @media(max-width:1100px){.workspacebar{flex-wrap:wrap;height:auto;min-height:43px;padding:6px 10px}.workspace-actions{margin-left:auto}.layout{grid-template-columns:var(--sidebar-width,205px) 5px minmax(0,1fr)}.topactions .saved{display:none}.reader-bottom small{display:none}}
 @media(max-width:700px){header{min-height:56px;padding:8px 10px;height:auto}.brand small{display:none}.brand{font-size:17px}.topactions button{font-size:11px}.topactions #preview{display:none}.layout{height:auto;display:flex;min-height:calc(100dvh - 56px)}.layout>aside{max-height:180px!important;padding:10px}.workspace{min-height:calc(100dvh - 56px)}.workspacebar{gap:5px}.workspace-actions{width:100%;justify-content:flex-end}.workspace-actions button{flex:1}.canvas{padding:10px;max-height:75dvh}.paper{padding:25px}.editpage-toolbar{padding:5px;gap:5px}.editpage-selection{padding:5px;flex-wrap:wrap}#editpageviewport{height:65dvh;padding:12px}.focus-mode .layout>aside{display:none}.export-options{grid-template-columns:1fr}#exportdialog{padding:20px;max-height:90dvh}.export-heading h2{font-size:22px}}
 @media(prefers-reduced-motion:reduce){button{transition:none}}
+
+/* Keep document controls in two compact rows, with horizontal scrolling on narrow screens. */
+.workspacebar{height:auto;min-height:43px;flex-wrap:nowrap;overflow-x:auto;flex-shrink:0}
+.workspacebar>.crumb{display:none}
+.workspacebar>.organizebar{padding:0;border:0;background:none;gap:5px;flex-shrink:0}
+.workspacebar>.organizebar>span{display:none}
+.workspacebar>.organizebar #undoorganize{margin-left:0}
+.workspacebar .viewtabs,.workspacebar .workspace-actions{flex-shrink:0;white-space:nowrap}
+.workspacebar .workspace-actions{margin-left:auto;width:auto}
+.editor-control-row{display:flex;align-items:center;flex-wrap:nowrap;overflow-x:auto;min-height:38px;background:#fff;border-bottom:1px solid var(--line);flex-shrink:0}
+.editor-control-row>.toolbar{flex-wrap:nowrap;flex-shrink:0;min-height:36px;padding:3px 6px;gap:1px;border:0;background:none}
+.editor-control-row>.editpage-toolbar{display:flex;flex-wrap:nowrap;flex-shrink:0;min-height:36px;border:0;border-left:1px solid var(--line);padding:3px 6px;gap:5px}
+.editor-control-row>.editpage-toolbar[hidden]{display:none}
+.editor-control-row button,.editor-control-row select,.editor-control-row label{white-space:nowrap;font-size:11px}
+.editor-control-row .reader-group{flex-wrap:nowrap;flex-shrink:0}
+#new.new-book{width:100%;margin:12px 0!important;padding:12px 10px;font-size:13px;font-weight:700;background:linear-gradient(135deg,#8055ff,#5432d5);color:#fff;border:1px solid #7144ed;box-shadow:0 4px 12px #7144ed35}
+.book-settings #marginpreset{display:block;width:100%;margin:6px 0;padding:8px;font-size:11px}
+#pastedialog{width:min(1100px,96vw);max-width:96vw;height:90dvh;max-height:94dvh;padding:22px;overflow:auto}
+#pastedialog[open]{display:flex;flex-direction:column;gap:10px}
+#pastedialog h2,#pastedialog p{margin:0;flex-shrink:0}
+#pastedialog #pastetext{width:100%;flex:1;min-height:220px;max-height:none;height:auto;resize:vertical;padding:16px;border:1px solid #cfc3eb;border-radius:10px;font:15px/1.6 'DM Sans',sans-serif;white-space:pre-wrap;overflow:auto}
+#pastedialog .actions{margin-top:0;flex-shrink:0}

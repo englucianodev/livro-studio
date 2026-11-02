@@ -156,7 +156,7 @@ export async function importFile(file,progress) {
 }
 export async function createEPUB(book,options={}) {
     if(!globalThis.JSZip)throw Error('O exportador não carregou. Recarregue a página.');
-    const {toXHTML,readingCSS}=await import('./book-tools.mjs');
+    const {toXHTML,epubReadingCSS}=await import('./book-tools.mjs');
     const optimized=await optimizeBookImages(book,options);book=optimized.book;options.onStats?.(optimized.stats);
     const zip=new JSZip(),images=new Map(),chapters=[];let imageIndex=0;
     const exportChapters=book.chapters.filter(c=>!(book.cover&&c.isCover));
@@ -175,7 +175,7 @@ for(const img of doc.querySelectorAll('img')){const data=img.getAttribute('src')
     const lang=/^[a-z]{2,3}(?:-[a-zA-Z0-9]+)*$/.test(book.language||'')?book.language:'pt-BR';
     zip.file('mimetype','application/epub+zip',{compression:'STORE'});
     zip.file('META-INF/container.xml','<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
-    zip.file('OEBPS/style.css',readingCSS);
+    zip.file('OEBPS/style.css',epubReadingCSS(book));
     chapters.forEach((html,i)=>zip.file(`OEBPS/ch${i}.xhtml`,`<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" lang="${lang}" xml:lang="${lang}"><head><title>${escapeXML(book.chapters[i].name)}</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body>${html}</body></html>`));
     zip.file('OEBPS/nav.xhtml','<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="'+lang+'"><head><title>Sumário</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body><nav epub:type="toc" id="toc"><h1>Sumário</h1><ol>'+book.chapters.map((c,i)=>`<li><a href="ch${i}.xhtml">${escapeXML(cleanTOCLabel(c.name))}</a></li>`).join('')+'</ol></nav></body></html>');
     zip.file('OEBPS/content.opf',`<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="book-id">urn:uuid:${crypto.randomUUID()}</dc:identifier><dc:title>${escapeXML(book.title||'Meu livro')}</dc:title><dc:creator>${escapeXML(book.author||'Autor desconhecido')}</dc:creator><dc:language>${lang}</dc:language>${coverAsset?'<meta name="cover" content="cover-image"/>':''}<meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d{3}Z$/,'Z')}</meta></metadata><manifest>${coverAsset?`<item id="cover-image" href="${coverAsset.path}" media-type="${coverAsset.type}" properties="cover-image"/><item id="cover-page" href="cover.xhtml" media-type="application/xhtml+xml"/>`:``}<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/>${book.chapters.map((c,i)=>`<item id="ch${i}" href="ch${i}.xhtml" media-type="application/xhtml+xml"/>`).join('')}${[...images.values()].map(a=>`<item id="${a.id}" href="${a.path}" media-type="${a.type}"/>`).join('')}</manifest><spine>${coverAsset?'<itemref idref="cover-page"/>':''}${book.chapters.map((c,i)=>`<itemref idref="ch${i}"/>`).join('')}</spine></package>`);

@@ -65,7 +65,7 @@ export function buildPDFChapters(source,{removeMargins=source.removeMargins!==fa
 }
 export function mergeBooks(books){
     const first=books[0];if(!first)throw Error('Nenhum arquivo foi importado.');
-    const result={imagePreset:first.imagePreset||'balanced',title:first.title,author:first.author||'',language:first.language||'pt-BR',fileName:first.fileName||first.title,cover:first.cover||null,coverOptions:[],chapters:[],sources:[],notes:[]};
+    const result={marginPreset:first.marginPreset||'none',imagePreset:first.imagePreset||'balanced',title:first.title,author:first.author||'',language:first.language||'pt-BR',fileName:first.fileName||first.title,cover:first.cover||null,coverOptions:[],chapters:[],sources:[],notes:[]};
     for(const b of books){const offset=result.chapters.length;
         result.chapters.push(...b.chapters.map(c=>({...c,id:c.id||crypto.randomUUID(),html:sanitize(c.html.replace(/href="ch(\d+)\.xhtml/g,(_,n)=>`href="ch${Number(n)+offset}.xhtml`))})));
         result.sources.push(...b.sources||[]);result.notes.push(...b.notes||[]);if(!result.cover&&b.cover)result.cover=b.cover;

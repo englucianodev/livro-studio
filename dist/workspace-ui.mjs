@@ -9,6 +9,8 @@ export function installWorkspace(){
  const pages=document.createElement('button');pages.textContent='▤ Miniaturas';pages.setAttribute('aria-pressed','false');
  pages.onclick=()=>{const on=document.body.classList.toggle('show-thumbnails');pages.setAttribute('aria-pressed',String(on));};
  actions.append(tools,pages,focus);bar.append(actions);
+ const organize=document.querySelector('.organizebar');
+ bar.insertBefore(organize,actions);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('focus-mode')&&!document.querySelector('dialog[open]'))focus.click();});
  const metadata=document.querySelector('.bookmeta');
  const settings=document.createElement('details');settings.className='book-settings';
@@ -16,5 +18,9 @@ export function installWorkspace(){
  const preset=document.getElementById('imagepreset').closest('label');
  const filename=document.getElementById('exportfilename').closest('label');
  settings.append(filename,preset);
+ const margins=document.createElement('label');
+ margins.innerHTML='Margens laterais no EPUB<select id="marginpreset" aria-label="Margens laterais no EPUB"><option value="none">Nenhuma · mais espaço no Kindle</option><option value="small">Pequena · 2%</option><option value="normal">Normal · 4%</option></select><small>O Kindle também aplica as margens escolhidas no aparelho.</small>';
+ settings.append(margins);
+ settings.after(document.getElementById('new'));
  preset.firstChild.textContent='Qualidade das imagens no EPUB';
 }

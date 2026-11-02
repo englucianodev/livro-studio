@@ -229,6 +229,11 @@ export function validateBook(data) {
     if (!data || typeof data.title !== 'string' || !Array.isArray(data.chapters) || !data.chapters.length || data.chapters.length > 5000 || data.chapters.some(c=>typeof c.name!=='string'||typeof c.html!=='string')) throw Error('Arquivo de livro inválido.');
     const image=/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i;
     const sources=Array.isArray(data.sources)?data.sources.filter(s=>typeof s.id==='string'&&Array.isArray(s.pages)).map(s=>({...s,name:String(s.name||'PDF'),pages:s.pages.map(p=>({...p,id:String(p.id||crypto.randomUUID()),lines:Array.isArray(p.lines)?p.lines:[],...(p.manualHTML!==undefined?{manualHTML:sanitize(String(p.manualHTML))}:{})})),outline:Array.isArray(s.outline)?s.outline:[]})):[];
-    return {imagePreset:['light','balanced','detailed'].includes(data.imagePreset)?data.imagePreset:'balanced',title:data.title,author:String(data.author||''),fileName:String(data.fileName||data.title),cover:data.cover&&image.test(data.cover.data||'')?{data:data.cover.data,name:String(data.cover.name||'Capa'),kind:String(data.cover.kind||'image')}:null,coverOptions:Array.isArray(data.coverOptions)?data.coverOptions.filter(c=>image.test(c?.data||'')):[],sources,language:/^[a-z]{2,3}(?:-[a-zA-Z0-9]+)*$/.test(data.language||'')?data.language:'pt-BR',chapters:data.chapters.map(c=>({id:String(c.id||crypto.randomUUID()),...(c.sourceId?{sourceId:String(c.sourceId)}:{}),...(c.isCover?{isCover:true}:{}),name:c.name,html:sanitize(c.html)}))};
+    return {marginPreset:['none','small','normal'].includes(data.marginPreset)?data.marginPreset:'none',imagePreset:['light','balanced','detailed'].includes(data.imagePreset)?data.imagePreset:'balanced',title:data.title,author:String(data.author||''),fileName:String(data.fileName||data.title),cover:data.cover&&image.test(data.cover.data||'')?{data:data.cover.data,name:String(data.cover.name||'Capa'),kind:String(data.cover.kind||'image')}:null,coverOptions:Array.isArray(data.coverOptions)?data.coverOptions.filter(c=>image.test(c?.data||'')):[],sources,language:/^[a-z]{2,3}(?:-[a-zA-Z0-9]+)*$/.test(data.language||'')?data.language:'pt-BR',chapters:data.chapters.map(c=>({id:String(c.id||crypto.randomUUID()),...(c.sourceId?{sourceId:String(c.sourceId)}:{}),...(c.isCover?{isCover:true}:{}),name:c.name,html:sanitize(c.html)}))};
 }
 
+
+export function epubReadingCSS(book){
+ const margin={none:'0',small:'2%',normal:'4%'}[book.marginPreset]||'0';
+ return readingCSS.replace('margin:0 4%;',`margin:0 ${margin};`);
+}
