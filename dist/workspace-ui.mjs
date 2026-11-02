@@ -11,6 +11,13 @@ export function installWorkspace(){
  actions.append(tools,pages,focus);bar.append(actions);
  const organize=document.querySelector('.organizebar');
  bar.insertBefore(organize,actions);
+ const bookActions=document.createElement('div');bookActions.className='primary-book-actions';
+ bookActions.append(document.getElementById('export'),document.getElementById('preview'));
+ organize.after(bookActions);
+ const footer=document.querySelector('.statusbar');
+ footer.append(document.getElementById('saved'));
+ document.querySelector('.workspace').append(footer);
+ document.querySelector('body>header').remove();
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('focus-mode')&&!document.querySelector('dialog[open]'))focus.click();});
  const metadata=document.querySelector('.bookmeta');
  const settings=document.createElement('details');settings.className='book-settings';
