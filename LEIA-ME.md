@@ -18,7 +18,8 @@ Não abra dist/index.html diretamente: os módulos JavaScript e o leitor PDF pre
 - dist/index.html: interface do editor.
 - dist/app.js: edição, armazenamento e interação.
 - dist/book-tools.mjs: organização do texto e estilos adaptáveis.
-- dist/importers.mjs: importação PDF, TXT, EPUB, MOBI, AZW/AZW3 e exportação EPUB.
+- dist/importers.mjs: importação DOC, DOCX, PDF, TXT, EPUB, MOBI, AZW/AZW3 e exportação EPUB.
+- dist/word-formats.mjs: leitura e escrita de documentos Word no navegador.
 - dist/mobile.css: interface responsiva e ferramentas de organização.
 - dist/vendor/: bibliotecas JSZip, PDF.js e leitor MOBI/KF8 do Foliate, com avisos de licença nos arquivos e foliate-LICENSE.
 - servidor.mjs: servidor HTTP local, sem dependências adicionais.
@@ -30,7 +31,7 @@ O código do projeto não inclui os livros salvos no navegador. Na versão onlin
 
 ## Recursos e limites
 
-Importação de ebooks sem DRM e PDFs com texto selecionável; organização com comparação antes/depois; reconstrução opcional de parágrafos; preservação de versos; leitor com páginas simuladas e zoom; exportação EPUB com sumário e imagens rasterizadas quando disponíveis. A saída é EPUB, inclusive para livros originalmente em MOBI ou AZW.
+Importação de documentos Word DOC/DOCX, ebooks sem DRM e PDFs com texto selecionável; organização com comparação antes/depois; reconstrução opcional de parágrafos; preservação de versos; leitor com páginas simuladas e zoom. A exportação oferece DOCX, DOC (Word 97–2003), EPUB, HTML, TXT e PDF pela impressão do navegador.
 
 A reconstrução automática precisa de revisão, especialmente em poesia, colunas, notas e títulos ambíguos. PDFs escaneados precisam de OCR. Figuras, gráficos e tabelas detectados no PDF são preservados como blocos de imagem otimizados. A diagramação fixa completa é substituída por texto adaptável. KFX e Topaz não são suportados.
 
@@ -95,6 +96,18 @@ A interface removeu a opção de idioma e os blocos de dicas e envio ao Kindle. 
 
 ## Novidades na interface e exportação
 
-O botão **Exportar livro** oferece EPUB, HTML e TXT para download. A opção PDF abre a impressão do navegador: selecione **Salvar como PDF** como destino. HTML mantém a formatação e as imagens; TXT contém somente texto. O backup JSON continua disponível para retomar a edição.
+O botão **Exportar livro** oferece DOCX, DOC, EPUB, HTML e TXT para download. A opção PDF abre a impressão do navegador: selecione **Salvar como PDF** como destino. HTML mantém a formatação e as imagens; TXT contém somente texto. O backup JSON continua disponível para retomar a edição.
 
 A interface tem controles mais compactos e uma área maior para o livro. **Mais ferramentas** abre os recursos adicionais, **Miniaturas** exibe a navegação visual e **Modo foco** recolhe o menu lateral. Pressione Esc para sair do foco. O zoom inicial aproveita a largura disponível; os controles de zoom e Ajustar largura permitem personalizar a visualização.
+
+## Importação e exportação Word
+
+Use **Importar arquivo** ou arraste arquivos `.doc` e `.docx` para o editor. Também é possível importar vários documentos juntos. O resumo permite adicionar os capítulos ao projeto ou abrir como outro livro. Para baixar um documento Word, clique em **Exportar livro** e escolha **DOCX** ou **DOC**.
+
+As conversões acontecem no navegador, inclusive na versão estática hospedada: não dependem de Word instalado, de servidor de conversão ou de envio do conteúdo para terceiros. As bibliotecas já estão incluídas em `dist/vendor/word-codecs.mjs`.
+
+DOCX é o formato recomendado. O DOC gerado é um arquivo binário Word 97–2003 válido. Texto Unicode, formatação básica, listas, tabelas simples e imagens PNG/JPEG são preservados; GIF/WebP são convertidos para PNG na exportação. A capa e o início de cada capítulo também são incluídos. Revise paginação, notas e elementos complexos após a conversão. DOC antigo anterior ao Word 97, arquivos com senha, macros, objetos incorporados e imagens vetoriais WMF/EMF não têm suporte. No DOC, a importação utiliza o corpo do documento; cabeçalhos, rodapés e comentários não integram o livro.
+
+O limite de importação continua em 80 MB por arquivo. O exportador DOC tem limite de cerca de 7 MB; quando excedido, o editor orienta a exportar em DOCX. Células mescladas precisam ser desfeitas antes de exportar para Word. O backup JSON preserva o projeto editável completo.
+
+Para desenvolvimento, execute `npm ci`, `npm run build:word` e `npm test`. O comando de build atualiza apenas o módulo Word e as licenças. O aplicativo continua iniciando sem instalar dependências. A verificação opcional `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-word.ps1` abre as amostras criadas pelos testes em uma instância oculta do Word instalado, confere texto, tabelas e imagens e encerra essa instância.

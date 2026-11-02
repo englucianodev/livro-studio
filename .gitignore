@@ -1,0 +1,5 @@
+node_modules/
+.npm-cache/
+.word-test-output/
+.jsdoc-*.json
+.jsdoc-*.md

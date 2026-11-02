@@ -147,11 +147,12 @@ export async function readPDF(file,progress=()=>{}) {
 export async function importFile(file,progress) {
     if(file.size>MAX_FILE)throw Error('Importe um arquivo de até 80 MB.');
     const ext=file.name.split('.').pop().toLowerCase();
+    if(['doc','docx'].includes(ext))return (await import('./word-formats.mjs')).readWord(file,progress);
     if(ext==='epub')return readEPUB(file,progress);
     if(['mobi','azw','azw3','prc'].includes(ext))return readMOBI(file,progress);
     if(ext==='pdf')return readPDF(file,progress);
     if(ext==='txt')return {title:plainName(file),author:'',language:'pt-BR',chapters:splitHTMLChapters(textToHTML(await file.text()),{name:plainName(file)}),notes:['Quebras de linha foram tratadas como texto contínuo; linhas vazias delimitam parágrafos.']};
-    throw Error('Selecione PDF, TXT, EPUB, MOBI, AZW ou AZW3.');
+    throw Error('Selecione DOC, DOCX, PDF, TXT, EPUB, MOBI, AZW ou AZW3.');
 }
 export async function createEPUB(book,options={}) {
     if(!globalThis.JSZip)throw Error('O exportador não carregou. Recarregue a página.');

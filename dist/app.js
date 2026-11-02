@@ -33,7 +33,7 @@ $('editor').addEventListener('paste',e=>{e.preventDefault();document.execCommand
 $('paste').onclick=()=>$('pastedialog').showModal();$('insertpaste').onclick=()=>{const text=$('pastetext').value;if(!text.trim())return;$('pastedialog').close();editorTools.insertHTML(textToHTML(text,{reconstruct:false,headings:false}));$('pastetext').value='';$('pastedialog').close();};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 function download(blob,name){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
-const filename=()=>(book.fileName||book.title).replace(/\.(epub|pdf|azw3?|mobi|txt|html|json)$/i,'').replace(/[^\p{L}\p{N} _-]/gu,'').trim()||'meu-livro';
+const filename=()=>(book.fileName||book.title).replace(/\.(epub|pdf|azw3?|mobi|txt|html|docx?|json)$/i,'').replace(/[^\p{L}\p{N} _-]/gu,'').trim()||'meu-livro';
 $('backup').onclick=()=>{capture();download(new Blob([JSON.stringify(book,null,2)],{type:'application/json'}),filename()+'.json');};
 $('backupbeforeimport').onclick=()=>$('backup').click();
 function invalidateUndo(){undoOrganization=null;$('undoorganize').disabled=true;}

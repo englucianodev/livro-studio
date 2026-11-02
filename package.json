@@ -5,9 +5,19 @@
   "type": "module",
   "description": "Editor local de ebooks e exportador EPUB",
   "scripts": {
-    "start": "node servidor.mjs"
+    "start": "node servidor.mjs",
+    "build:word": "node scripts/build-word.mjs",
+    "test": "node --test tests/word-formats.test.mjs"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "docx": "9.15.1",
+    "mammoth": "1.13.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "jsdom": "26.1.0"
   }
 }

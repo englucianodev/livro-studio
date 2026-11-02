@@ -36,7 +36,7 @@ export function printBook(book){
 
 export function installExportFormats({getBook,download,filename,exportEPUB,toast}){
  const dialog=document.createElement('dialog');dialog.id='exportdialog';
- dialog.innerHTML=`<div class="export-heading"><span class="eyebrow">PRONTO PARA COMPARTILHAR</span><h2>Seu livro, em mais lugares.</h2><p>Escolha o formato que combina com seu próximo passo.</p></div><div class="export-options"><button data-export="epub"><strong>EPUB <span>E-readers</span></strong><small>Livro adaptável, com imagens e capítulos.</small></button><button data-export="pdf"><strong>PDF <span>Impressão</span></strong><small>Abre a impressão: escolha “Salvar como PDF”.</small></button><button data-export="html"><strong>HTML <span>Web</span></strong><small>Documento com formatação e imagens para o navegador.</small></button><button data-export="txt"><strong>TXT <span>Texto</span></strong><small>Conteúdo em texto simples, sem imagens ou estilos.</small></button></div><div class="actions"><button id="closeexport">Voltar ao livro</button></div>`;
+ dialog.innerHTML=`<div class="export-heading"><span class="eyebrow">PRONTO PARA COMPARTILHAR</span><h2>Seu livro, em mais lugares.</h2><p>Escolha o formato que combina com seu próximo passo.</p></div><div class="export-options"><button data-export="docx"><strong>DOCX <span>Word</span></strong><small>Documento editável com texto, imagens, listas e tabelas.</small></button><button data-export="doc"><strong>DOC <span>Word 97–2003</span></strong><small>Documento binário para versões antigas do Word.</small></button><button data-export="epub"><strong>EPUB <span>E-readers</span></strong><small>Livro adaptável, com imagens e capítulos.</small></button><button data-export="pdf"><strong>PDF <span>Impressão</span></strong><small>Abre a impressão: escolha “Salvar como PDF”.</small></button><button data-export="html"><strong>HTML <span>Web</span></strong><small>Documento com formatação e imagens para o navegador.</small></button><button data-export="txt"><strong>TXT <span>Texto</span></strong><small>Conteúdo em texto simples, sem imagens ou estilos.</small></button></div><div class="actions"><button id="closeexport">Voltar ao livro</button></div>`;
  document.body.append(dialog);
  document.getElementById('export').onclick=()=>dialog.showModal();
  document.getElementById('closeexport').onclick=()=>dialog.close();
@@ -45,9 +45,15 @@ export function installExportFormats({getBook,download,filename,exportEPUB,toast
   if(format==='epub'){dialog.close();await exportEPUB();return;}
   try{
    const book=getBook();
-   if(format==='pdf'){printBook(book);toast('Na impressão, escolha Salvar como PDF para gerar o arquivo.');}
+   if(format==='doc'||format==='docx'){
+    button.disabled=true;
+    const {createWord}=await import('./word-formats.mjs');
+    download(await createWord(book,format),filename()+'.'+format);
+    toast(format.toUpperCase()+' exportado.');
+   }
+   else if(format==='pdf'){printBook(book);toast('Na impressão, escolha Salvar como PDF para gerar o arquivo.');}
    else download(new Blob([format==='html'?bookHTML(book):'\uFEFF'+bookText(book)],{type:format==='html'?'text/html;charset=utf-8':'text/plain;charset=utf-8'}),filename()+'.'+format);
    dialog.close();
-  }catch(error){toast('Exportação: '+error.message);}
+  }catch(error){toast('Exportação: '+error.message);}finally{button.disabled=false;}
  });
 }
