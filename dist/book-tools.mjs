@@ -17,7 +17,7 @@ export function sanitize(html) {
         const className = /(?:^|[\s_-])(verse|poem|poetry|verso|poesia)(?:$|[\s_-])/i.test(e.className) ? 'verse' : '';
         [...e.attributes].forEach(a => e.removeAttribute(a.name));
         if (id) e.id = id;
-        if(userFormat){e.setAttribute('data-editor-format','true');for(const key of ['color','backgroundColor'])if(/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]+)$/i.test(userStyles[key]))e.style[key]=userStyles[key];if(['0.85em','1em','1.25em','1.5em'].includes(userStyles.fontSize))e.style.fontSize=userStyles.fontSize;}
+        if(userFormat){e.setAttribute('data-editor-format','true');for(const key of ['color','backgroundColor'])if(/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]+)$/i.test(userStyles[key]))e.style[key]=userStyles[key];if(['0.85em','1em','1.25em','1.5em'].includes(userStyles.fontSize)||/^(?:[6-9]|[12]\d|30)pt$/.test(userStyles.fontSize))e.style.fontSize=userStyles.fontSize;}
         if(tag==='img'&&['25%','50%','75%','100%'].includes(mediaWidth))e.setAttribute('data-media-width',mediaWidth);
         if(toc==='true')e.setAttribute('data-toc','true');
         if(['td','th'].includes(tag))for(const [k,v]of Object.entries(spans))if(/^[1-9]\d?$/.test(v||''))e.setAttribute(k,v);

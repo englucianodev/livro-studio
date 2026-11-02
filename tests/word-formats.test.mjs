@@ -6,7 +6,7 @@ import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {createWord,readWord} from '../dist/word-formats.mjs';
 import {importFile,createEPUB} from '../dist/importers.mjs';
-import {validateBook} from '../dist/book-tools.mjs';
+import {validateBook,sanitize} from '../dist/book-tools.mjs';
 import {mergeBooks} from '../dist/structure.mjs';
 const require=createRequire(import.meta.url);
 const docToText=require('../dist/vendor/docToText.cjs');
@@ -21,7 +21,7 @@ test('EPUB aplica cada margem e mantém a preferência ao validar e reunir livro
 });
 const pixel='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
 const book={title:'Histórias & descobertas',author:'João da Conceição',language:'pt-BR',cover:{data:pixel},chapters:[
- {name:'Capítulo 1',html:'<h1>Capítulo 1 — Olá, mundo 🌎</h1><p>Texto com <strong>negrito</strong>, <em>itálico</em>, <u>sublinhado</u> e ação.</p><p><span data-editor-format="true" style="color:#7144ed">Violeta</span><br>Outra linha</p><ul><li>Uma ideia<ul><li>Ideia filha</li></ul></li><li>Outra ideia</li></ul><ol><li>Primeiro</li><li>Segundo</li></ol><table><tr><th>Nome</th><th>Valor</th></tr><tr><td>Maçã</td><td>20</td></tr><tr><td></td><td>Vazio à esquerda</td></tr></table><p><img alt="Exemplo" src="'+pixel+'"></p>'},
+ {name:'Capítulo 1',html:'<h1>Capítulo 1 — Olá, mundo 🌎</h1><p>Texto com <strong>negrito</strong>, <em>itálico</em>, <u>sublinhado</u> e ação.</p><p><span data-editor-format="true" style="color:#7144ed;font-size:18pt">Violeta</span><br>Outra linha</p><ul><li>Uma ideia<ul><li>Ideia filha</li></ul></li><li>Outra ideia</li></ul><ol><li>Primeiro</li><li>Segundo</li></ol><table><tr><th>Nome</th><th>Valor</th></tr><tr><td>Maçã</td><td>20</td></tr><tr><td></td><td>Vazio à esquerda</td></tr></table><p><img alt="Exemplo" src="'+pixel+'"></p>'},
  {name:'Capítulo 2',html:'<h1>Capítulo 2</h1><p>Fim da história.</p>'}
 ]};
 before(()=>{const dom=new JSDOM('<!doctype html><html><body></body></html>');globalThis.document=dom.window.document;globalThis.DOMParser=dom.window.DOMParser;globalThis.JSZip=JSZip;});
@@ -37,6 +37,7 @@ for(const format of ['doc','docx'])test(`${format}: exporta arquivo real e reimp
   const xml=new DOMParser().parseFromString(await zip.file('word/document.xml').async('string'),'application/xml');
   assert.equal(xml.querySelector('parsererror'),null);assert.equal(xml.getElementsByTagNameNS('*','tbl').length,1);
   assert.ok(xml.getElementsByTagNameNS('*','drawing').length>=2);
+  assert.ok([...xml.getElementsByTagNameNS('*','sz')].some(e=>e.getAttributeNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','val')==='36'));
  }
  const file=new File([bytes],'teste.'+format);const result=await importFile(file);
  const html=result.chapters.map(c=>c.html).join('');const doc=new DOMParser().parseFromString(html,'text/html');
@@ -58,4 +59,12 @@ test('importação DOCX descarta scripts e links perigosos',async()=>{
  const safe=await createWord({...book,cover:null,chapters:[{name:'Seguro',html:'<p>Conteúdo seguro<script>alert(1)</script><a href="javascript:alert(1)">link</a></p>'}]},'docx');
  const result=await readWord(new File([safe],'seguro.docx'));
  assert.doesNotMatch(result.chapters.map(c=>c.html).join(''),/<script|javascript:|alert\(1\)/);
+});
+
+test('tamanhos em pontos preservados entre 6 e 30, com estilos fora do limite removidos',()=>{
+ for(let size=6;size<=30;size+=2){
+  const html=sanitize(`<p><span data-editor-format="true" style="font-size:${size}pt">Texto</span></p>`);
+  assert.ok(html.includes(`font-size: ${size}pt`));
+ }
+ for(const size of [2,32,100])assert.ok(!sanitize(`<span data-editor-format="true" style="font-size:${size}pt">Texto</span>`).includes('font-size'));
 });

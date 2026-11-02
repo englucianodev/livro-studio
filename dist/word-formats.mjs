@@ -91,6 +91,7 @@ async function inlineRuns(node,format={}){
  if(tag==='a')fmt.url=node.getAttribute('href');
  const color=colorHex(style.color);if(color)fmt.color=toColorRef(color);
  if(style.fontSize?.endsWith('em'))fmt.size=12*parseFloat(style.fontSize);
+ if(style.fontSize?.endsWith('pt'))fmt.size=parseFloat(style.fontSize);
  if(tag==='br')return [{...fmt,text:'\n'}];
  if(tag==='img')return [await imageRun(node)];
  const runs=[];for(const child of node.childNodes)runs.push(...await inlineRuns(child,fmt));return runs;

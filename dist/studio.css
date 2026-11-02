@@ -40,3 +40,8 @@ dialog{border:1px solid #e8e0f8;box-shadow:0 24px 100px #23103f33;border-radius:
 #pastedialog h2,#pastedialog p{margin:0;flex-shrink:0}
 #pastedialog #pastetext{width:100%;flex:1;min-height:220px;max-height:none;height:auto;resize:vertical;padding:16px;border:1px solid #cfc3eb;border-radius:10px;font:15px/1.6 'DM Sans',sans-serif;white-space:pre-wrap;overflow:auto}
 #pastedialog .actions{margin-top:0;flex-shrink:0}
+
+.font-size-control{display:inline-flex;align-items:center;gap:3px;flex-shrink:0}
+.font-size-control #textsize{width:48px;padding:5px 3px;border:1px solid var(--line);border-radius:5px;background:white;text-align:center;font-size:12px;appearance:textfield}
+.font-size-control #textsize::-webkit-inner-spin-button,.font-size-control #textsize::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.font-size-control button{min-width:28px;font-size:15px;padding:3px 6px}
