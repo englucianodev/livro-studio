@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node servidor.mjs",
     "build:word": "node scripts/build-word.mjs",
-    "test": "node --test tests/word-formats.test.mjs"
+    "test": "node --test tests/word-formats.test.mjs tests/page-editor.test.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -2,9 +2,10 @@ import {sanitize,escapeXML,textToHTML} from './book-tools.mjs';
 import {blobAsDataURL} from './importers.mjs';
 import {optimizeRaster} from './media.mjs';
 export function installEditorTools({save,toast}){
+ let pageHistory=null;
  const $=id=>document.getElementById(id),toolbar=document.querySelector('.toolbar');let editor=$('editor');const bound=new WeakSet(),histories=new WeakMap();let range=null,selectedImage=null,imageData='',replacing=false;let history=[editor.innerHTML],historyIndex=0,restoring=false;
- function record(){if(restoring||history[historyIndex]===editor.innerHTML)return;history=history.slice(0,historyIndex+1);history.push(editor.innerHTML);historyIndex++;while(history.length>30||history.length>2&&history.reduce((n,s)=>n+s.length,0)>20000000){history.shift();historyIndex--;}}
- function undo(delta){const next=historyIndex+delta;if(next<0||next>=history.length)return;historyIndex=next;restoring=true;editor.innerHTML=history[historyIndex];range=null;resetImage();save();restoring=false;}
+ function record(){if(pageHistory&&editor.closest('#editpagecanvas')){pageHistory.record();return;}if(restoring||history[historyIndex]===editor.innerHTML)return;history=history.slice(0,historyIndex+1);history.push(editor.innerHTML);historyIndex++;while(history.length>30||history.length>2&&history.reduce((n,s)=>n+s.length,0)>20000000){history.shift();historyIndex--;}}
+ function undo(delta){if(pageHistory&&editor.closest('#editpagecanvas')){pageHistory.undo(delta);return;}const next=historyIndex+delta;if(next<0||next>=history.length)return;historyIndex=next;restoring=true;editor.innerHTML=history[historyIndex];range=null;resetImage();save();restoring=false;}
 
  const extra=document.createElement('div');extra.className='advanced-tools';extra.innerHTML=`
  <div class="toolgroup"><button data-more="insertOrderedList" title="Lista numerada">1. Lista</button><button data-more="indent" title="Aumentar recuo">Recuar →</button><button data-more="outdent" title="Diminuir recuo">← Recuo</button><button data-align="justify" title="Justificar texto">Justificar</button><button data-align="right" title="Alinhar à direita">À direita</button></div>
@@ -64,5 +65,5 @@ export function installEditorTools({save,toast}){
  const format=$('format');if(format)format.onchange=()=>command('formatBlock',format.value);const clean=$('clean');if(clean)clean.onclick=()=>command('removeFormat');
  function attach(target){if(bound.has(target))return;bound.add(target);target.addEventListener('click',onEditorClick);target.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['z','y'].includes(e.key.toLowerCase())){e.preventDefault();undo(e.key.toLowerCase()==='y'||e.shiftKey?1:-1);}});}
  attach(editor);
- return {record,insertHTML:insert,setTarget(target){if(!target||target===editor)return;histories.set(editor,{history,historyIndex});resetImage();editor=target;range=null;attach(editor);const prior=histories.get(target);history=prior?.history||[editor.innerHTML];historyIndex=prior?.historyIndex||0;$('tabletools').hidden=true;},reset(){range=null;resetImage();history=[editor.innerHTML];historyIndex=0;$('tabletools').hidden=true;}};
+ return {setPageHistory(handler){pageHistory=handler;},record,insertHTML:insert,setTarget(target){if(!target||target===editor)return;histories.set(editor,{history,historyIndex});resetImage();editor=target;range=null;attach(editor);const prior=histories.get(target);history=prior?.history||[editor.innerHTML];historyIndex=prior?.historyIndex||0;$('tabletools').hidden=true;},reset(){range=null;resetImage();history=[editor.innerHTML];historyIndex=0;$('tabletools').hidden=true;}};
 }
