@@ -1,3 +1,4 @@
+import {installDRMImport} from './drm-ui.mjs';
 import {installWorkspace} from './workspace-ui.mjs';
 import {installExportFormats} from './export-formats.mjs';
 import {installPageEditor} from './page-editor.mjs';
@@ -10,6 +11,7 @@ import {installEditionUI} from './edition-ui.mjs';
 import {sanitize,escapeXML as esc,organizeHTML,textToHTML,validateBook,readingCSS,findPageArtifacts,cleanPageArtifactsHTML} from './book-tools.mjs';
 import {importFile,createEPUB} from './importers.mjs';
 const $=id=>document.getElementById(id);
+const unlockProtectedFile=installDRMImport();
 const mediaOptions=document.createElement('label');mediaOptions.style.cssText='display:block;margin:12px 0;font-size:12px';mediaOptions.innerHTML='Imagens no EPUB<select id="imagepreset" aria-label="Qualidade das imagens" style="display:block;width:100%;margin-top:6px;padding:8px"><option value="light">Leve · arquivos menores</option><option value="balanced" selected>Equilibrado · recomendado</option><option value="detailed">Mais detalhes · arquivo maior</option></select><small>Texto justificado e fonte uniforme. Figuras centralizadas; tabelas de PDF preservadas como imagens. Reimporte PDFs antigos para recuperar figuras.</small>';$('covermanager').closest('.covercard').before(mediaOptions);
 const initial=()=>({title:'Meu primeiro livro',author:'',language:'pt-BR',chapters:[{name:'Primeiras páginas',html:'<h1>Um novo capítulo começa aqui.</h1><p>Todo livro começa com uma ideia. Uma frase que ficou na memória, um texto que merece ser relido ou uma história esperando para ganhar forma.</p><p>Este é o seu espaço para reunir essas palavras. Você pode escrever aqui, colar trechos ou importar um PDF, EPUB, MOBI ou AZW sem DRM para começar.</p><blockquote>Há sempre um livro esperando para nascer das palavras que guardamos.</blockquote><h2>Uma leitura que acompanha você</h2><p>Organize suas ideias em capítulos e use Organizar texto para revisar quebras de linha e parágrafos. Quando estiver pronto, exporte em EPUB, PDF, HTML ou TXT para compartilhar sua história.</p>'}]});
 let pendingImports=[],importBusy=false;
@@ -33,7 +35,7 @@ $('editor').addEventListener('paste',e=>{e.preventDefault();document.execCommand
 $('paste').onclick=()=>$('pastedialog').showModal();$('insertpaste').onclick=()=>{const text=$('pastetext').value;if(!text.trim())return;$('pastedialog').close();editorTools.insertHTML(textToHTML(text,{reconstruct:false,headings:false}));$('pastetext').value='';pageEditing.reflow();toast('Trecho adicionado ao capítulo.');};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 function download(blob,name){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
-const filename=()=>(book.fileName||book.title).replace(/\.(epub|pdf|azw3?|mobi|txt|html|docx?|json)$/i,'').replace(/[^\p{L}\p{N} _-]/gu,'').trim()||'meu-livro';
+const filename=()=>(book.fileName||book.title).replace(/\.(epub|pdf|azw3?|mobi|txt|html|docx?|kfx(?:-zip)?|json)$/i,'').replace(/[^\p{L}\p{N} _-]/gu,'').trim()||'meu-livro';
 function invalidateUndo(){undoOrganization=null;$('undoorganize').disabled=true;}
 $('new').onclick=()=>{if(confirm('Criar outro livro? Exporte o livro atual antes de substituí-lo, se quiser guardá-lo.')){book={title:'Livro sem título',author:'',language:'pt-BR',chapters:[{name:'Capítulo 1',html:'<h1>Capítulo 1</h1><p><br></p>'}]};active=0;invalidateUndo();render();save();}};
 function renderImportQueue(){
@@ -67,7 +69,7 @@ async function processFiles(files){
     if(!$('importdialog').open){pendingImports=[];pendingImport=null;}
     const failures=[];
     try{for(const [index,file]of [...files].entries())try{
-        const item=await importFile(file,msg=>{btn.textContent=msg;$('importprogress').textContent=`Arquivo ${index+1}/${files.length}: ${msg}`;});item.inputName=file.name;item.fileName=file.name.replace(/\.[^.]+$/,'');pendingImports.push(item);pendingImport=item;
+        const item=await importFile(file,msg=>{btn.textContent=msg;$('importprogress').textContent=`Arquivo ${index+1}/${files.length}: ${msg}`;},{unlock:unlockProtectedFile});item.inputName=file.name;item.fileName=file.name.replace(/\.[^.]+$/,'');pendingImports.push(item);pendingImport=item;
     }catch(e){failures.push(file.name+': '+e.message);}
     if(pendingImports.length){renderImportSummary();if(!$('importdialog').open)$('importdialog').showModal();}
     $('importfailures').textContent=failures.join('\n');if(failures.length)toast(pendingImports.length?'Alguns arquivos não foram importados. Confira a lista de erros no resumo.':failures.join(' · '));

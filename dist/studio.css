@@ -57,3 +57,9 @@ dialog{border:1px solid #e8e0f8;box-shadow:0 24px 100px #23103f33;border-radius:
 .statusbar #counts{grid-column:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .statusbar #saved{grid-column:3;justify-self:end;margin:0;text-align:right}
 @media(max-width:700px){.layout{height:auto;min-height:100dvh}.workspace{min-height:100dvh}.statusbar #saved{font-size:8px}}
+
+#drmdialog{width:min(600px,94vw);max-width:94vw;max-height:92dvh;padding:24px;overflow:auto}
+#drmdialog label{display:block;margin:12px 0;font-size:12px}
+#drmdialog input{display:block;padding:8px;border:1px solid var(--line);border-radius:6px;margin-top:5px;background:white}
+#drmfilename{overflow-wrap:anywhere;font-weight:600}
+#drmstatus{color:#7144ed;font-size:12px;overflow-wrap:anywhere}

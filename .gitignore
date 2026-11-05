@@ -3,3 +3,7 @@ node_modules/
 .word-test-output/
 .jsdoc-*.json
 .jsdoc-*.md
+
+.kfx-reference/
+
+.kindle-helper-reference/

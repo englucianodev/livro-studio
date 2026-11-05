@@ -33,7 +33,7 @@ O código do projeto não inclui os livros salvos no navegador. Na versão onlin
 
 Importação de documentos Word DOC/DOCX, ebooks sem DRM e PDFs com texto selecionável; organização com comparação antes/depois; reconstrução opcional de parágrafos; preservação de versos; leitor com páginas simuladas e zoom. A exportação oferece DOCX, DOC (Word 97–2003), EPUB, HTML, TXT e PDF pela impressão do navegador.
 
-A reconstrução automática precisa de revisão, especialmente em poesia, colunas, notas e títulos ambíguos. PDFs escaneados precisam de OCR. Figuras, gráficos e tabelas detectados no PDF são preservados como blocos de imagem otimizados. A diagramação fixa completa é substituída por texto adaptável. KFX e Topaz não são suportados.
+A reconstrução automática precisa de revisão, especialmente em poesia, colunas, notas e títulos ambíguos. PDFs escaneados precisam de OCR. Figuras, gráficos e tabelas detectados no PDF são preservados como blocos de imagem otimizados. A diagramação fixa completa é substituída por texto adaptável. KFX sem DRM de texto adaptável é aceito, com os limites descritos abaixo. Topaz não é suportado.
 
 Os livros são processados e salvos localmente no navegador. As bibliotecas de conversão estão incluídas; as fontes visuais podem usar Google Fonts quando houver internet, com alternativas locais disponíveis. O envio pelo Send to Kindle requer internet.
 
@@ -122,3 +122,16 @@ Os comandos de salvar e abrir backup JSON foram removidos da interface, inclusiv
 Criar outro livro fica destacado abaixo das configurações. Organizar texto e Desfazer última operação ficam junto às guias de edição e leitura. A formatação vem antes dos controles de página na mesma linha, com rolagem horizontal quando necessário. A janela Colar um trecho ocupa até 90% da altura da tela e redistribui textos longos em páginas após a inserção.
 
 O tamanho da fonte usa valores numéricos de 6 a 30 pontos, com botões − e + em passos de 2. Selecione o texto antes de aplicar; o tamanho explícito é mantido no EPUB, HTML e Word. Os comandos de tachado, sobrescrito, subscrito e linha divisória foram retirados das ferramentas.
+
+
+## Importação KFX e KFX-ZIP
+
+Use Importar arquivo ou arraste um `.kfx` sem DRM. Quando o livro estiver dividido em contêineres, reúna todas as partes em um ZIP com extensão `.kfx-zip` e importe o pacote. Um contêiner de metadados isolado não contém o livro completo.
+
+A conversão acontece inteiramente no navegador, inclusive na hospedagem estática, sem Calibre, Word, servidor de conversão ou envio do livro a terceiros. Depois de importar, o conteúdo pode ser editado e exportado nos formatos existentes. Não há exportação em KFX.
+
+O leitor aceita contêineres binários CONT de versões 1 e 2, sem compressão interna e sem DRM. Recupera ordem de leitura explícita, título/autor/idioma, seções, texto Unicode, negrito/itálico básicos, listas, tabelas simples e imagens PNG/JPEG/GIF/WebP. Revise links, notas, estilos avançados e sumários. Fontes incorporadas são substituídas pela fonte uniforme do editor.
+
+Arquivos protegidos, partes ausentes, contêineres inválidos e tipos de conteúdo não implementados produzem uma mensagem de erro. Cadernos Scribe, recursos interativos e variantes complexas de diagramação fixa não têm suporte garantido. Imagens em JPEG XR, formatos vetoriais e imagens divididas em blocos recebem marcadores no conteúdo e avisos para revisão. O limite é 80 MB por arquivo, com até 200 MB descompactados e 2.000 entradas por pacote. Para livros com recursos não suportados, use uma cópia EPUB sem DRM.
+
+Os testes usam amostras próprias geradas e decodificadas por uma implementação independente. Consulte `tests/fixtures/README.md` para a origem e os limites dessas amostras.
