@@ -2,6 +2,8 @@ import {composePDFVisualLines} from './pdf-visuals.mjs';
 import {parseHTML,sanitize,escapeXML,looksLikeHeading} from './book-tools.mjs';
 import {cleanPDFMargins,pagesToHTML} from './pdf-layout.mjs';
 const norm=s=>s.normalize('NFKC').replace(/\s+/g,' ').trim().toLocaleLowerCase();
+// Abertura sem texto real (só número de página, por exemplo) é descartada.
+const trivial=node=>!node.querySelector?.('img,table')&&/^[\s\divxlcdmIVXLCDM.\-–—|·]{0,8}$/.test(node.textContent.trim());
 const content=node=>Boolean(node.textContent.trim()||node.querySelector?.('img,table,hr'));
 export function splitHTMLChapters(html,{name='Capítulo',anchors=[],allHeadings=false}={}){
     const doc=parseHTML(sanitize(html));let boundaries=[];
@@ -16,7 +18,7 @@ export function splitHTMLChapters(html,{name='Capítulo',anchors=[],allHeadings=
     boundaries=boundaries.filter((b,i,a)=>a.findIndex(x=>x.el===b.el)===i).sort((a,b)=>a.el===b.el?0:a.el.compareDocumentPosition(b.el)&4?-1:1);
     if(!boundaries.length)return [{name,html:sanitize(html)}];
     const chunks=[];
-    const chunk=(start,end,title)=>{const range=doc.createRange();start?range.setStartBefore(start):range.setStart(doc.body,0);end?range.setEndBefore(end):range.setEnd(doc.body,doc.body.childNodes.length);const wrapper=doc.createElement('div');wrapper.append(range.cloneContents());if(content(wrapper))chunks.push({name:title,html:sanitize(wrapper.innerHTML)});};
+    const chunk=(start,end,title)=>{const range=doc.createRange();start?range.setStartBefore(start):range.setStart(doc.body,0);end?range.setEndBefore(end):range.setEnd(doc.body,doc.body.childNodes.length);const wrapper=doc.createElement('div');wrapper.append(range.cloneContents());if(!content(wrapper))return;if(!start){if(trivial(wrapper))return;const h=wrapper.querySelector('h1,h2')?.textContent.trim();if(h&&h.length<=120)title=h;}chunks.push({name:title,html:sanitize(wrapper.innerHTML)});};
     chunk(null,boundaries[0].el,name+' · Abertura');
     boundaries.forEach((b,i)=>chunk(b.el,boundaries[i+1]?.el,b.name));return chunks.length?chunks:[{name,html:sanitize(html)}];
 }

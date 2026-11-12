@@ -19,10 +19,12 @@ export function cleanPDFMargins(pages) {
     const candidates=new Map();
     pages.forEach((p,index)=>{
         const font=median(p.lines.filter(l=>l.top/p.height>.12&&l.top/p.height<.88).map(l=>l.size));
+        // A posição vertical (e não a ordem no arquivo) define o que está no topo ou no pé da página.
+        const order=p.lines.map((_,j)=>j).sort((x,y)=>p.lines[x].top-p.lines[y].top),rank=new Map(order.map((j,r)=>[j,r]));
         p.lines.forEach((l,line)=>{
             const pos=l.top/p.height,band=pos<.12?'cabeçalho':pos>.88?'rodapé':null;
             if(!band||l.text.trim().length>180||l.size>font*1.15)return;
-            if(band==='cabeçalho'&&line>1||band==='rodapé'&&line<p.lines.length-2)return;
+            const r=rank.get(line);if(band==='cabeçalho'&&r>1||band==='rodapé'&&r<p.lines.length-2)return;
             const number=pageNumber(l.text),k=band+'|'+(number?'número':key(l.text));
             if(!candidates.has(k))candidates.set(k,[]);
             candidates.get(k).push({page:index,line,text:l.text.trim(),pos,kind:number?'número de página':band});

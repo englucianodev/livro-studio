@@ -23,7 +23,7 @@ export function sanitize(html) {
         if(['td','th'].includes(tag))for(const [k,v]of Object.entries(spans))if(/^[1-9]\d?$/.test(v||''))e.setAttribute(k,v);
         if (['left','right','center','justify'].includes(align)) e.style.textAlign = align;
         if (keepLines || className) e.setAttribute('data-keep-lines', 'true');
-        if (tag === 'a' && href && /^(#|ch\d+\.xhtml(?:#|$))/.test(href)) e.setAttribute('href', href);
+        if (tag === 'a' && href && (/^(#|ch\d+\.xhtml(?:#|$))/.test(href) || /^(https?:\/\/|mailto:)[^\s"<>]+$/i.test(href))) e.setAttribute('href', href);
         if (tag === 'img') {
             if (!/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(src || '')) {
                 e.replaceWith(doc.createTextNode(alt ? `[Imagem: ${alt}]` : '[Imagem não importada]'));
@@ -225,11 +225,15 @@ export function organizeHTML(html, options = {}) {
     }
     return {html:sanitize(doc.body.innerHTML),stats};
 }
+const text=(v,max)=>String(v??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').slice(0,max);
+function bookDetails(data){
+    return {description:text(data.description,4000),publisher:text(data.publisher,200),pubDate:/^\d{4}(-\d{2}(-\d{2})?)?$/.test(data.pubDate||'')?data.pubDate:'',isbn:text(data.isbn,20).replace(/[^\dXx -]/g,''),series:text(data.series,200),seriesIndex:/^\d{1,4}$/.test(String(data.seriesIndex??''))?String(data.seriesIndex):'',subject:text(data.subject,300)};
+}
 export function validateBook(data) {
     if (!data || typeof data.title !== 'string' || !Array.isArray(data.chapters) || !data.chapters.length || data.chapters.length > 5000 || data.chapters.some(c=>typeof c.name!=='string'||typeof c.html!=='string')) throw Error('Arquivo de livro inválido.');
     const image=/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i;
     const sources=Array.isArray(data.sources)?data.sources.filter(s=>typeof s.id==='string'&&Array.isArray(s.pages)).map(s=>({...s,name:String(s.name||'PDF'),pages:s.pages.map(p=>({...p,id:String(p.id||crypto.randomUUID()),lines:Array.isArray(p.lines)?p.lines:[],...(p.manualHTML!==undefined?{manualHTML:sanitize(String(p.manualHTML))}:{})})),outline:Array.isArray(s.outline)?s.outline:[]})):[];
-    return {marginPreset:['none','small','normal'].includes(data.marginPreset)?data.marginPreset:'none',imagePreset:['light','balanced','detailed'].includes(data.imagePreset)?data.imagePreset:'balanced',title:data.title,author:String(data.author||''),fileName:String(data.fileName||data.title),cover:data.cover&&image.test(data.cover.data||'')?{data:data.cover.data,name:String(data.cover.name||'Capa'),kind:String(data.cover.kind||'image')}:null,coverOptions:Array.isArray(data.coverOptions)?data.coverOptions.filter(c=>image.test(c?.data||'')):[],sources,language:/^[a-z]{2,3}(?:-[a-zA-Z0-9]+)*$/.test(data.language||'')?data.language:'pt-BR',chapters:data.chapters.map(c=>({id:String(c.id||crypto.randomUUID()),...(c.sourceId?{sourceId:String(c.sourceId)}:{}),...(c.isCover?{isCover:true}:{}),name:c.name,html:sanitize(c.html)}))};
+    return {marginPreset:['none','small','normal'].includes(data.marginPreset)?data.marginPreset:'none',imagePreset:['light','balanced','detailed'].includes(data.imagePreset)?data.imagePreset:'balanced',title:data.title,author:String(data.author||''),id:/^[0-9a-f-]{36}$/i.test(data.id||'')?data.id:crypto.randomUUID(),...bookDetails(data),fileName:String(data.fileName||data.title),cover:data.cover&&image.test(data.cover.data||'')?{data:data.cover.data,name:String(data.cover.name||'Capa'),kind:String(data.cover.kind||'image')}:null,coverOptions:Array.isArray(data.coverOptions)?data.coverOptions.filter(c=>image.test(c?.data||'')):[],sources,language:/^[a-z]{2,3}(?:-[a-zA-Z0-9]+)*$/.test(data.language||'')?data.language:'pt-BR',chapters:data.chapters.map(c=>({id:String(c.id||crypto.randomUUID()),...(c.sourceId?{sourceId:String(c.sourceId)}:{}),...(c.isCover?{isCover:true}:{}),name:c.name,html:sanitize(c.html)}))};
 }
 
 

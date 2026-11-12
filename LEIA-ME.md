@@ -117,9 +117,9 @@ Para desenvolvimento, execute `npm ci`, `npm run build:word` e `npm test`. O com
 
 Em Configurações do livro, escolha Margens laterais no EPUB: Nenhuma (padrão), Pequena (2%) ou Normal (4%). A preferência fica salva com o projeto e é aplicada nas próximas exportações EPUB. O Kindle também controla suas próprias margens; envie novamente o EPUB após alterar essa opção.
 
-Os comandos de salvar e abrir backup JSON foram removidos da interface, inclusive na importação. As referências a backups nas seções históricas acima descrevem versões anteriores. O salvamento automático no navegador continua ativo; exporte o livro antes de criar outro se quiser guardar seu conteúdo.
+O backup JSON voltou na atualização de novembro/2026: Exportar livro → Backup, ou Configurações do livro → Salvar backup / Abrir backup. Também é possível arrastar o arquivo `.json` para a área de importação. O salvamento automático no navegador continua ativo.
 
-Criar outro livro fica destacado abaixo das configurações. Organizar texto e Desfazer última operação ficam junto às guias de edição e leitura. A formatação vem antes dos controles de página na mesma linha, com rolagem horizontal quando necessário. A janela Colar um trecho ocupa até 90% da altura da tela e redistribui textos longos em páginas após a inserção.
+Criar outro livro fica destacado abaixo das configurações. Organizar texto e Desfazer última operação ficam junto às guias de edição e leitura. A formatação vem antes dos controles de página; quando não cabem na largura, os controles passam para a linha de baixo. A janela Colar um trecho ocupa até 90% da altura da tela e redistribui textos longos em páginas após a inserção.
 
 O tamanho da fonte usa valores numéricos de 6 a 30 pontos, com botões − e + em passos de 2. Selecione o texto antes de aplicar; o tamanho explícito é mantido no EPUB, HTML e Word. Os comandos de tachado, sobrescrito, subscrito e linha divisória foram retirados das ferramentas.
 
@@ -135,3 +135,18 @@ O leitor aceita contêineres binários CONT de versões 1 e 2, sem compressão i
 Arquivos protegidos, partes ausentes, contêineres inválidos e tipos de conteúdo não implementados produzem uma mensagem de erro. Cadernos Scribe, recursos interativos e variantes complexas de diagramação fixa não têm suporte garantido. Imagens em JPEG XR, formatos vetoriais e imagens divididas em blocos recebem marcadores no conteúdo e avisos para revisão. O limite é 80 MB por arquivo, com até 200 MB descompactados e 2.000 entradas por pacote. Para livros com recursos não suportados, use uma cópia EPUB sem DRM.
 
 Os testes usam amostras próprias geradas e decodificadas por uma implementação independente. Consulte `tests/fixtures/README.md` para a origem e os limites dessas amostras.
+
+## Atualização de novembro/2026
+
+- Celular: Exportar livro fica sempre visível no topo; capítulos, capa e importação abrem pelo botão “Capítulos, capa e importação”.
+- O botão repetido “Leitor de páginas” foi retirado (use a aba Leitor de páginas). A barra de ferramentas quebra em linhas em vez de esconder botões.
+- Configurações do livro: idioma, descrição/sinopse, editora, data de publicação, ISBN (com validação), série e número, assunto/gênero. Tudo vai para os metadados do EPUB.
+- Cada livro tem um identificador fixo: reenviar o EPUB ao Kindle atualiza o mesmo livro em vez de criar uma cópia.
+- EPUB com sumário NCX (compatibilidade com leitores antigos), marcos de navegação (capa, sumário, início), vários autores separados por ponto e vírgula e links externos (http, https e mailto) preservados.
+- O nome do arquivo acompanha o título enquanto você não personalizá-lo.
+- Word: os estilos Título e Subtítulo viram a página de rosto e o título do documento é usado como título do livro; citações viram blocos de citação; avisos do conversor aparecem em português.
+- PDF: números de página e cabeçalhos são reconhecidos pela posição na página; o título e o autor dos metadados do PDF são aproveitados; a abertura com apenas o número da página não vira mais um capítulo.
+- O navegador recebe um pedido para manter os livros salvos de forma permanente, e um aviso aparece quando o espaço está acabando.
+- Exportar livro mostra como enviar o EPUB ao Kindle pelo Send to Kindle.
+- A importação de arquivos com DRM foi retirada da versão publicada; os módulos estão em `extras/drm/` (veja o LEIA-ME de lá).
+- Novos testes em `tests/usability.test.mjs` (rode `npm test`).

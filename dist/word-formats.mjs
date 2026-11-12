@@ -44,15 +44,30 @@ function modelHTML(model){
  closeList();closeTable();return sanitize(html);
 }
 
+// Traduz os avisos técnicos do conversor e remove repetições.
+function wordNotes(messages){
+ const out=new Set();
+ for(const m of messages||[]){
+  const text=String(m.message||'');let match;
+  if((match=text.match(/^Unrecognised (paragraph|run) style: '([^']*)'/)))out.add(`Estilo ${match[1]==='paragraph'?'de parágrafo':'de texto'} do Word não reconhecido: “${match[2]}”. O trecho foi importado com a formatação padrão.`);
+  else if(/image/i.test(text)&&/unsupported|could not|failed/i.test(text))out.add('Uma imagem do documento não pôde ser convertida. Confira as figuras do livro.');
+  else if(/comment/i.test(text))out.add('Comentários do Word não são importados.');
+  else if(text)out.add('Aviso do conversor Word: '+text);
+ }
+ return [...out].slice(0,12);
+}
 export async function readWord(file,progress=()=>{}){
  progress('Lendo documento Word…');const bytes=new Uint8Array(await file.arrayBuffer());
  const {mammoth,docToText}=await codecs();let html,title=file.name.replace(/\.[^.]+$/,''),author='',notes=[];
  if(bytes[0]===0x50&&bytes[1]===0x4b){
-  const result=await mammoth.convertToHtml({arrayBuffer:bytes.buffer},{includeDefaultStyleMap:true,styleMap:['u => u'],externalFileAccess:false});
-  html=sanitize(result.value);notes=result.messages.map(m=>m.message);
+  const result=await mammoth.convertToHtml({arrayBuffer:bytes.buffer},{includeDefaultStyleMap:true,styleMap:['u => u',"p[style-name='Title'] => h1.doc-title:fresh","p[style-name='Título'] => h1.doc-title:fresh","p[style-name='Subtitle'] => h2.doc-subtitle:fresh","p[style-name='Subtítulo'] => h2.doc-subtitle:fresh","p[style-name='Quote'] => blockquote > p:fresh","p[style-name='Citação'] => blockquote > p:fresh","p[style-name='Intense Quote'] => blockquote > p:fresh"],externalFileAccess:false});
+  const raw=parseHTML(result.value);const docTitle=raw.querySelector('h1.doc-title')?.textContent.trim()||'';
+  // Título e subtítulo do Word viram uma página de rosto centralizada.
+  for(const e of raw.querySelectorAll('.doc-title,.doc-subtitle'))e.style.textAlign='center';
+  html=sanitize(raw.body.innerHTML);notes=wordNotes(result.messages);
   if(globalThis.JSZip){
    const zip=await JSZip.loadAsync(bytes),entry=zip.file('docProps/core.xml');
-   if(entry){const xml=new DOMParser().parseFromString(await entry.async('string'),'application/xml');title=xml.getElementsByTagNameNS('*','title')[0]?.textContent?.trim()||title;author=xml.getElementsByTagNameNS('*','creator')[0]?.textContent?.trim()||'';}
+   if(entry){const xml=new DOMParser().parseFromString(await entry.async('string'),'application/xml');title=xml.getElementsByTagNameNS('*','title')[0]?.textContent?.trim()||docTitle||title;author=xml.getElementsByTagNameNS('*','creator')[0]?.textContent?.trim()||'';}
   }
  }else if(bytes[0]===0xd0&&bytes[1]===0xcf){
   const model=docToText.model(bytes);
