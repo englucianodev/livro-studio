@@ -1,5 +1,5 @@
 import {composePDFVisualLines} from './pdf-visuals.mjs';
-import {parseHTML,sanitize,escapeXML,looksLikeHeading} from './book-tools.mjs';
+import {parseHTML,sanitize,escapeXML,looksLikeHeading,contentId} from './book-tools.mjs';
 import {cleanPDFMargins,pagesToHTML} from './pdf-layout.mjs';
 const norm=s=>s.normalize('NFKC').replace(/\s+/g,' ').trim().toLocaleLowerCase();
 // Abertura sem texto real (só número de página, por exemplo) é descartada.
@@ -7,7 +7,7 @@ const trivial=node=>!node.querySelector?.('img,table')&&/^[\s\divxlcdmIVXLCDM.\-
 const content=node=>Boolean(node.textContent.trim()||node.querySelector?.('img,table,hr'));
 export function splitHTMLChapters(html,{name='Capítulo',anchors=[],allHeadings=false}={}){
     const doc=parseHTML(sanitize(html));let boundaries=[];
-    for(const a of anchors){const el=doc.getElementById(a.id);if(el)boundaries.push({el,name:a.title||el.textContent.trim()||name});}
+    for(const a of anchors){const el=doc.getElementById(contentId(a.id));if(el)boundaries.push({el,name:a.title||el.textContent.trim()||name});}
     if(!boundaries.length){
         const all=[...doc.body.querySelectorAll('h1,h2,h3')].filter(e=>e.textContent.trim());
         const explicit=all.filter(e=>/^(?:cap[íi]tulo|chapter|parte|part|livro|book)\s+[\p{L}\d]/iu.test(e.textContent.trim()));

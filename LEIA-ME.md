@@ -1,4 +1,6 @@
-# Livro Studio — projeto local
+# Folha — editor local de ebooks
+
+Folha (antes chamado Livro Studio) transforma documentos Word, PDFs e ebooks sem DRM em livros EPUB, direto no navegador.
 
 Esta pasta contém o código completo da versão atual do editor, com suas bibliotecas de importação incluídas. Não é necessário executar npm install.
 
@@ -20,8 +22,9 @@ Não abra dist/index.html diretamente: os módulos JavaScript e o leitor PDF pre
 - dist/book-tools.mjs: organização do texto e estilos adaptáveis.
 - dist/importers.mjs: importação DOC, DOCX, PDF, TXT, EPUB, MOBI, AZW/AZW3 e exportação EPUB.
 - dist/word-formats.mjs: leitura e escrita de documentos Word no navegador.
-- dist/mobile.css: interface responsiva e ferramentas de organização.
-- dist/vendor/: bibliotecas JSZip, PDF.js e leitor MOBI/KF8 do Foliate, com avisos de licença nos arquivos e foliate-LICENSE.
+- dist/folha.css: folha de estilos única da interface, com os tokens de cor e tipografia da marca no topo.
+- dist/fonts/: Manrope (interface) e Literata (texto do livro), hospedadas localmente sob a licença SIL OFL 1.1.
+- dist/vendor/: bibliotecas JSZip, PDF.js 4.10 (módulos `pdf.min.mjs` e `pdf.worker.min.mjs`, licença em pdfjs-LICENSE) e leitor MOBI/KF8 do Foliate, com avisos de licença nos arquivos e foliate-LICENSE.
 - servidor.mjs: servidor HTTP local, sem dependências adicionais.
 - INICIAR.cmd: inicializador para Windows.
 
@@ -35,7 +38,7 @@ Importação de documentos Word DOC/DOCX, ebooks sem DRM e PDFs com texto seleci
 
 A reconstrução automática precisa de revisão, especialmente em poesia, colunas, notas e títulos ambíguos. PDFs escaneados precisam de OCR. Figuras, gráficos e tabelas detectados no PDF são preservados como blocos de imagem otimizados. A diagramação fixa completa é substituída por texto adaptável. KFX sem DRM de texto adaptável é aceito, com os limites descritos abaixo. Topaz não é suportado.
 
-Os livros são processados e salvos localmente no navegador. As bibliotecas de conversão estão incluídas; as fontes visuais podem usar Google Fonts quando houver internet, com alternativas locais disponíveis. O envio pelo Send to Kindle requer internet.
+Os livros são processados e salvos localmente no navegador. As bibliotecas de conversão estão incluídas; as fontes da interface também ficam no projeto, então o editor funciona sem internet. O envio pelo Send to Kindle requer internet.
 
 Esta exportação é independente da hospedagem Sites e não contém credenciais nem configuração de publicação do site original.
 
@@ -119,7 +122,7 @@ Em Configurações do livro, escolha Margens laterais no EPUB: Nenhuma (padrão)
 
 O backup JSON voltou na atualização de novembro/2026: Exportar livro → Backup, ou Configurações do livro → Salvar backup / Abrir backup. Também é possível arrastar o arquivo `.json` para a área de importação. O salvamento automático no navegador continua ativo.
 
-Criar outro livro fica destacado abaixo das configurações. Organizar texto e Desfazer última operação ficam junto às guias de edição e leitura. A formatação vem antes dos controles de página; quando não cabem na largura, os controles passam para a linha de baixo. A janela Colar um trecho ocupa até 90% da altura da tela e redistribui textos longos em páginas após a inserção.
+Criar outro livro fica no fim da barra lateral, junto de Colar um trecho. Organizar texto e Desfazer última operação ficam junto às guias de edição e leitura. A formatação vem antes dos controles de página; quando não cabem na largura, os controles passam para a linha de baixo. A janela Colar um trecho ocupa até 90% da altura da tela e redistribui textos longos em páginas após a inserção.
 
 O tamanho da fonte usa valores numéricos de 6 a 30 pontos, com botões − e + em passos de 2. Selecione o texto antes de aplicar; o tamanho explícito é mantido no EPUB, HTML e Word. Os comandos de tachado, sobrescrito, subscrito e linha divisória foram retirados das ferramentas.
 
@@ -148,5 +151,15 @@ Os testes usam amostras próprias geradas e decodificadas por uma implementaçã
 - PDF: números de página e cabeçalhos são reconhecidos pela posição na página; o título e o autor dos metadados do PDF são aproveitados; a abertura com apenas o número da página não vira mais um capítulo.
 - O navegador recebe um pedido para manter os livros salvos de forma permanente, e um aviso aparece quando o espaço está acabando.
 - Exportar livro mostra como enviar o EPUB ao Kindle pelo Send to Kindle.
-- A importação de arquivos com DRM foi retirada da versão publicada; os módulos estão em `extras/drm/` (veja o LEIA-ME de lá).
+- A importação de arquivos com DRM foi retirada. Arquivos protegidos mostram uma mensagem de erro.
 - Novos testes em `tests/usability.test.mjs` (rode `npm test`).
+
+## Nova marca: Folha (novembro/2026)
+
+- O nome mudou para Folha, com novo símbolo, paleta verde e tipografia Manrope e Literata. Barra superior reorganizada: modos à esquerda e Exportar livro como única ação em destaque, à direita.
+- Os livros já salvos continuam no navegador: as chaves internas de armazenamento mantêm o nome anterior (`livrostudio-*`) de propósito.
+- Novos backups usam a extensão `.folha.json`. Backups `.livrostudio.json` continuam abrindo normalmente.
+- Segurança: PDF.js atualizado de 3.11 para 4.10.38, que corrige o CVE-2024-4367 (um PDF malicioso podia executar código no editor). Ele também roda com `isEvalSupported:false`. Há política de segurança de conteúdo (CSP) no servidor local e no `vercel.json`.
+- Ids vindos de livros importados recebem o prefixo `bk-` (links internos acompanham), para não colidir com os elementos da interface.
+- O salvamento automático deixou de copiar o livro inteiro a cada tecla, o que deixa a digitação mais leve em livros com muitas imagens.
+- `mammoth` e `docx` passaram a ser dependências de desenvolvimento (servem só ao build e aos testes). `jszip` foi declarado. `lzma-purejs` foi removido.

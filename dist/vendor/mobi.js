@@ -542,7 +542,7 @@ export class MOBI extends PDB {
     }
     #getHeaders(buf) {
         const palmdoc = getStruct(PALMDOC_HEADER, buf)
-        // Livro Studio accepts only unencrypted records, including combo KF8.
+        // Folha accepts only unencrypted records, including combo KF8.
         if (palmdoc.encryption !== 0) throw new Error('DRM: conteúdo protegido')
         const mobi = getStruct(MOBI_HEADER, buf)
         if (mobi.magic !== 'MOBI') throw new Error('Missing MOBI header')

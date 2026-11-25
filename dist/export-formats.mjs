@@ -51,7 +51,7 @@ export function installExportFormats({getBook,download,filename,exportEPUB,toast
     download(await createWord(book,format),filename()+'.'+format);
     toast(format.toUpperCase()+' exportado.');
    }
-   else if(format==='backup'){download(new Blob([JSON.stringify({...book,app:'livro-studio',backupVersion:1,savedAt:new Date().toISOString()})],{type:'application/json'}),filename()+'.livrostudio.json');toast('Backup salvo. Para restaurar, use Abrir backup em Configurações do livro.');}
+   else if(format==='backup'){download(new Blob([JSON.stringify({...book,app:'folha',backupVersion:1,savedAt:new Date().toISOString()})],{type:'application/json'}),filename()+'.folha.json');toast('Backup salvo. Para restaurar, use Abrir backup em Configurações do livro.');}
    else if(format==='pdf'){printBook(book);toast('Na impressão, escolha Salvar como PDF para gerar o arquivo.');}
    else download(new Blob([format==='html'?bookHTML(book):'\uFEFF'+bookText(book)],{type:format==='html'?'text/html;charset=utf-8':'text/plain;charset=utf-8'}),filename()+'.'+format);
    dialog.close();
