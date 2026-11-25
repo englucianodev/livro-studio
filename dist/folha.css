@@ -1,0 +1,751 @@
+/* Folha — folha de estilos única do editor.
+   Tokens de marca: altere aqui para ajustar a identidade visual. */
+:root{
+  --leaf:#2f6b4f;        /* destaque principal */
+  --leaf-strong:#24543e; /* hover/ativo */
+  --leaf-soft:#e2ede6;   /* seleção, realce suave */
+  --ink:#1b2520;         /* texto */
+  --muted:#5e6a63;       /* texto secundário */
+  --line:#d6ded8;        /* bordas */
+  --desk:#edf1ee;        /* fundo da área de trabalho */
+  --wash:#f6f8f6;        /* superfícies sutis */
+  --paper:#fff;          /* página */
+  --danger:#a3402c;      /* excluir, erros */
+  --danger-soft:#f7ebe7;
+  --radius:8px;
+  --ui-font:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --book-font:'Literata',Georgia,'Times New Roman',serif;
+  --sidebar-width:248px;
+}
+
+/* Fontes locais (SIL OFL 1.1, ver fonts/*-OFL.txt) — o app funciona sem internet. */
+@font-face{font-family:'Manrope';font-style:normal;font-display:swap;font-weight:200 900;src:url(fonts/manrope-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Manrope';font-style:normal;font-display:swap;font-weight:200 900;src:url(fonts/manrope-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Literata';font-style:normal;font-display:swap;font-weight:200 900;src:url(fonts/literata-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Literata';font-style:normal;font-display:swap;font-weight:200 900;src:url(fonts/literata-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Literata';font-style:italic;font-display:swap;font-weight:200 900;src:url(fonts/literata-latin-wght-italic.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Literata';font-style:italic;font-display:swap;font-weight:200 900;src:url(fonts/literata-latin-ext-wght-italic.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+/* ── origem: index.html <style> ── */
+*{box-sizing:border-box}
+body{margin:0;font:14px var(--ui-font);color:var(--ink);background:var(--desk)}
+button,input,select{font:inherit}
+button,a{cursor:pointer}
+button{border:1px solid var(--line);background:white;color:var(--ink);border-radius:7px;padding:9px 14px}
+button:hover{background:var(--desk)}
+button.primary{background:var(--leaf);color:white;border-color:var(--leaf)}
+.saved{font-size:12px;color:var(--muted);margin-right:14px}
+.layout{display:grid;grid-template-columns:260px minmax(400px,1fr) 282px;min-height:calc(100vh - 76px)}
+aside{background:var(--wash);padding:26px 20px;border-right:1px solid var(--line)}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase}
+.bookmeta{margin:20px 0 28px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+input{width:100%;padding:10px 0;border:0;border-bottom:1px solid var(--line);outline:none;background:transparent;color:var(--ink)}
+#title{font-weight:600;font-size:16px}
+.chapterhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.chapterhead button{padding:2px 8px;font-size:20px}
+.chapter{display:flex;align-items:center;gap:10px;padding:13px 10px;border-radius:7px;margin:5px 0;cursor:pointer;color:var(--muted)}
+.chapter.active{background:var(--desk);color:var(--leaf);font-weight:600}
+.chapter span{font-size:11px;opacity:.6}
+.chapter b{flex:1;font-weight:500}
+.chapter button{border:0;background:none;padding:0 3px;color:var(--muted)}
+.importbox{margin-top:28px;border:1px dashed var(--line);border-radius:10px;padding:22px 14px;text-align:center;background:var(--wash)}
+.importbox .icon{font-size:26px;color:var(--leaf)}
+.importbox p{font-weight:600;margin-bottom:6px}
+.importbox small{display:block;font-size:11px;line-height:1.6;color:var(--muted);margin-bottom:14px}
+.workspace{min-width:0}
+.workspacebar{height:64px;display:flex;justify-content:space-between;align-items:center;padding:0 30px;border-bottom:1px solid var(--line)}
+.toolbar{min-height:56px;display:flex;align-items:center;gap:4px;background:var(--wash);border-bottom:1px solid var(--line);padding:8px 24px;flex-wrap:wrap}
+.toolbar button{border:0;padding:7px 10px;background:transparent;border-radius:4px}
+.toolbar button:hover{background:var(--desk)}
+.toolbar select{border:0;background:transparent;padding:7px;color:var(--ink);max-width:140px}
+.divider{height:23px;border-left:1px solid var(--line);margin:0 8px}
+.canvas{padding:32px 40px 50px;max-height:calc(100vh - 234px);overflow:auto}
+.paper{background:#fff;min-height:730px;max-width:760px;margin:auto;padding:62px 62px;box-shadow:0 3px 20px #293c3010;border:1px solid var(--line);border-radius:2px}
+.chapterlabel{color:var(--muted);font-size:10px;letter-spacing:2px;margin-bottom:24px}
+.editor{outline:none;min-height:520px;font:16px/1.95 var(--book-font);color:var(--ink);overflow-wrap:anywhere}
+.editor h1{font-size:31px;line-height:1.3;font-weight:500;color:var(--ink);margin:0 0 30px}
+.editor h2{font-size:23px}
+.editor p{margin:0 0 19px}
+.editor blockquote{border-left:3px solid var(--muted);padding-left:22px;font-style:italic;color:var(--muted);margin:25px 0}
+.statusbar{display:flex;justify-content:space-between;padding:13px 30px;border-top:1px solid var(--line);background:var(--wash);font-size:11px;color:var(--muted)}
+#toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:var(--ink);color:white;padding:14px 24px;border-radius:9px;z-index:10;box-shadow:0 4px 20px #0002;display:none;max-width:90vw}
+dialog{border:0;border-radius:14px;padding:30px;max-width:520px;width:90%;color:var(--ink)}
+dialog::backdrop{background:#14241a66}
+dialog p{line-height:1.7;color:var(--muted)}
+dialog .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+dialog textarea{width:100%;height:250px;border:1px solid var(--line);padding:12px;font:14px/1.6 inherit}
+a{color:var(--leaf)}
+@media(max-width:1150px){
+  .layout{grid-template-columns:230px 1fr}
+.paper{padding:40px}
+.canvas{padding:25px}}
+@media(max-width:700px){
+.saved{display:none}
+.layout{display:block}
+aside{padding:15px}
+.bookmeta{margin:10px 0;display:flex;gap:15px;padding-bottom:10px}
+.chapterhead,.importbox,aside>.eyebrow{display:none}
+#chapters{display:flex;overflow:auto}
+.chapter{min-width:160px}
+.canvas{max-height:none;padding:15px}
+.paper{padding:25px;min-height:550px}
+.workspacebar{padding:0 18px}
+.toolbar{padding:8px}
+}
+
+/* ── origem: mobile.css ── */
+@media(max-width:700px){
+  .chapterhead{display:flex;margin:14px 0 3px}
+.importbox{display:block;margin:12px 0 0;padding:10px}
+.importbox .icon,.importbox p,.importbox small{display:none}
+.importbox button{width:100%}
+}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--leaf);outline-offset:3px}
+button:disabled{opacity:.45;cursor:default}
+.organizebar{display:flex;align-items:center;gap:12px;padding:12px 24px;background:var(--leaf-soft);border-bottom:1px solid var(--line)}
+.organizebar>span{font-size:11px;color:var(--muted);flex:1}
+.organizebar button{font-size:12px}
+.organizebar #undoorganize{margin-left:auto;background:transparent}
+.canvas{max-height:calc(100vh - 295px)}
+.chapter .chapterselect{flex:1;text-align:left;font-weight:500;font-size:13px;color:inherit;padding:0}
+.chapter .chapterselect:hover{background:transparent;text-decoration:underline}
+.editor img,.comparisontext img{max-width:100%;height:auto}
+.reading [data-keep-lines]{white-space:pre-wrap;text-indent:0}
+.organizeoptions select{padding:8px;border:1px solid var(--line);border-radius:5px;color:var(--ink);background:white}
+.previewhint{font-size:11px!important;line-height:1.5}
+#organizedialog{max-width:1000px;width:94vw;max-height:92vh;overflow:auto;padding:28px}
+#organizedialog>p{font-size:12px;margin-top:5px}
+.dialogheading{display:flex;align-items:center;justify-content:space-between}
+.dialogheading h2{margin:8px 0}
+.organizeoptions{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;padding:18px;border:1px solid var(--line);border-radius:9px;background:var(--wash)}
+.organizeoptions>label{font-size:12px;line-height:1.5;display:block}
+.organizeoptions>label:first-child{grid-column:1/-1}
+.organizeoptions input[type=checkbox]{width:auto;margin-right:5px;accent-color:var(--leaf)}
+.organizeoptions small{font-size:10px;color:var(--muted);display:block;margin:4px 0 0 23px}
+.organizesummary{padding:14px;margin-top:12px;background:var(--leaf-soft);border-radius:7px;color:var(--leaf);font-size:11px;line-height:1.6}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.compare section{min-width:0}
+.compare h3{font-size:11px;font-weight:600;margin:10px 0;text-transform:uppercase;letter-spacing:.8px}
+.comparisontext{height:270px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:7px;padding:20px!important;font:14px/1.7 var(--book-font);margin:0!important;overflow-wrap:anywhere}
+.comparisontext h1{font-size:23px}
+.comparisontext h2{font-size:19px}
+.notice{background:var(--leaf-soft);padding:12px 14px;border-radius:7px;font-size:11px!important;line-height:1.7!important}
+.actions{flex-wrap:wrap}
+.actions button{font-size:12px}
+#importsummary p{font-size:12px}
+#importprogress{font-size:12px;padding:12px;background:var(--leaf-soft);margin-bottom:12px}
+#importprogress[hidden]{display:none}
+@media(max-width:1150px){
+.canvas{max-height:calc(100vh - 295px)}}
+@media(max-width:700px){
+  .canvas{max-height:none}
+.organizebar{padding:12px;gap:8px;flex-wrap:wrap}
+.organizebar>span{display:none}
+.organizebar button{font-size:11px}
+.bookmeta{flex-wrap:wrap}
+.bookmeta #title,.bookmeta #author{flex:1;min-width:120px}
+.organizeoptions{grid-template-columns:1fr}
+.compare{grid-template-columns:1fr}
+.comparisontext{height:210px}
+#organizedialog{padding:18px}
+.toolbar{gap:0}
+.actions{justify-content:flex-start!important}}
+.artifactsettings{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:8px;background:var(--wash)}
+.artifactsettings>p{font-size:11px;line-height:1.6;color:var(--muted)}
+.artifactsettings label,#pdfcleanupsettings>label{display:block;font-size:12px;margin:10px 0;line-height:1.6}
+.artifactsettings input[type=checkbox],#pdfcleanupsettings input[type=checkbox]{width:auto;accent-color:var(--leaf)}
+.artifactsettings textarea{height:74px;font-family:inherit;font-size:12px;resize:vertical;line-height:1.6}
+.artifactcandidates{max-height:150px;overflow:auto;font-size:11px}
+.artifactcandidates label{margin:5px 0}
+.artifactlist{max-height:190px;overflow:auto;font-size:11px;line-height:1.8;overflow-wrap:anywhere;padding-left:20px}
+details>summary{font-size:12px;cursor:pointer;color:var(--leaf);padding:10px 0}
+#importdialog:has(#pdfcleanupsettings:not([hidden])){max-width:920px;width:94vw;max-height:92vh;overflow:auto}
+#pdfcleanupsettings[hidden]{display:none}
+#dropzone{transition:background .15s,border-color .15s}
+#dropzone.dragactive{background:var(--line);border:2px solid var(--leaf);box-shadow:0 0 0 4px #245d4b22}
+.metafield{font-size:10px;color:var(--muted);display:block;margin-top:10px}
+.metafield input{font-size:12px}
+.covercard{display:flex;align-items:center;gap:12px;padding:12px;background:var(--desk);border-radius:9px;margin:16px 0}
+.covercard img{width:48px;height:66px;object-fit:contain;background:#fff}
+.covercard #coverplaceholder{font-size:36px;color:var(--muted)}
+.covercard strong{display:block;font-size:11px;margin-bottom:6px}
+.covercard button{font-size:10px;padding:5px 8px}
+.editionactions{display:grid;gap:7px;margin:15px 0}
+.editionactions button{font-size:11px;text-align:left}
+.editionactions small{font-size:10px;color:var(--muted)}
+.coverwork{display:flex;align-items:flex-start;gap:25px;margin:20px 0}
+.coverwork>img{width:180px;max-height:300px;object-fit:contain;background:var(--desk)}
+.coverwork>div{display:grid;gap:12px;flex:1}
+.coverwork label{font-size:12px}
+.coverwork select{max-width:240px}
+#coverdialog{max-width:650px}
+#chapterdialog{max-width:680px}
+#pagesdialog{max-width:920px;width:94vw;max-height:92vh;overflow:auto}
+#pagesdialog>p{font-size:12px}
+#pagesdialog input[type=checkbox]{width:auto;accent-color:var(--leaf)}
+.checkline{display:block;margin:15px 0;font-size:12px}
+.rangecontrols{display:flex;gap:12px;margin:12px 0}
+.rangecontrols input{border:1px solid var(--line);padding:9px;border-radius:5px}
+.rangecontrols button{font-size:11px;white-space:nowrap}
+#pagelist{max-height:330px;overflow:auto}
+.pagerow{padding:12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pagerow label{font-size:12px;flex:1;min-width:180px}
+.pagerow small{font-size:10px;width:100%;order:3;color:var(--muted);line-height:1.5}
+.pagerow button{font-size:11px;padding:4px 8px}
+.pagerow.excluded{background:var(--danger-soft);color:var(--muted)}
+.pagerow.excluded small{text-decoration:line-through}
+.pageinsert{margin-top:20px;padding:16px;background:var(--leaf-soft);border-radius:9px}
+.pageinsert h3{font-size:13px}
+.pageinsert input{background:white;padding:10px;border:1px solid var(--line);margin-top:10px}
+.pageinsert textarea{height:95px;font:12px/1.7 inherit;margin:10px 0}
+.pageinsert button{font-size:11px;margin:5px}
+.queuerow{display:flex;gap:6px;margin:7px 0}
+.queuerow>button:first-child{flex:1;text-align:left;font-size:11px}
+.queuerow>button.selected{background:var(--leaf-soft);border-color:var(--muted)}
+.queuerow>button{padding:7px}
+#importfailures{font-size:11px;color:var(--danger);white-space:pre-wrap}
+#importcoverpanel{display:flex;align-items:center;gap:16px;background:var(--leaf-soft);padding:15px;border-radius:8px;margin:10px 0}
+#importcoverpanel[hidden]{display:none}
+#importcoverimage{width:70px;height:100px;object-fit:contain}
+#importcoverpanel label{font-size:12px}
+#importcoverpanel input{width:auto}
+#importdialog{max-width:920px;width:94vw;max-height:92vh;overflow:auto}
+#chapterdialog select,#pagesdialog select,#coverdialog select{padding:8px;border:1px solid var(--line);border-radius:5px;background:white;max-width:100%}
+#chapterlist{max-height:45vh}
+aside{max-height:calc(100vh - 76px);overflow:auto}
+#chapters{max-height:310px;overflow:auto}
+@media(max-width:700px){
+  aside{max-height:none}
+.covercard{margin:8px 0}
+.editionactions{display:flex;flex-wrap:wrap}
+.editionactions small{width:100%}
+.coverwork{flex-direction:column}
+.coverwork>img{width:130px;max-height:190px}
+.metafield{width:100%}
+.queuerow>button:first-child{overflow-wrap:anywhere}
+.rangecontrols{flex-wrap:wrap}
+#chapters{max-height:180px}
+.coverwork select{max-width:100%}
+.pageinsert{padding:12px}}
+
+.editor img{display:block;max-width:100%;height:auto;margin:1em auto}
+.editor figure{margin:1em 0;text-align:center}
+.editor table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse}
+.editor td,.editor th{border:1px solid var(--line);padding:.3em;overflow-wrap:anywhere}
+.editor figcaption{text-align:center;font-size:.85em}
+
+/* ── origem: workspace.css ── */
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.layout{grid-template-columns:250px minmax(0,1fr);height:calc(100vh - 76px);min-height:0}
+.workspace{min-width:0;min-height:0;display:flex;flex-direction:column}
+.workspacebar{flex:none;gap:12px;height:62px;padding:0 24px}
+.viewtabs{display:flex;gap:4px;background:var(--desk);padding:4px;border-radius:9px;flex-shrink:0}
+.viewtabs button{font-size:12px;padding:7px 11px;background:transparent;border-color:transparent}
+.viewtabs button[aria-pressed=true]{background:white;box-shadow:0 1px 4px #24392a17;color:var(--leaf)}
+#editpane{display:flex;min-height:0;flex:1;flex-direction:column}
+.canvas{flex:1;max-height:none;min-height:180px;overflow:auto;padding:28px 36px}
+.paper{max-width:820px;min-height:680px}
+.statusbar{flex:none}
+.organizebar{flex:none;padding:10px 24px}
+.toolbar{flex:none;min-height:46px;padding:5px 20px}
+.toolbar button{padding:6px 9px}
+.advanced-tools{flex:none;display:flex;gap:6px 12px;flex-wrap:wrap;padding:10px 24px;background:var(--wash);border-bottom:1px solid var(--line)}
+.toolgroup{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.toolgroup button{font-size:11px;padding:6px 8px;background:#fff}
+.toolgroup label{font-size:10px;display:flex;align-items:center;gap:5px}
+.toolgroup select{padding:5px;border:1px solid var(--line);border-radius:5px;max-width:120px;font-size:11px;background:white}
+.toolgroup input[type=color]{width:29px;height:27px;padding:2px;border:1px solid var(--line);border-radius:4px}
+.selection-tools{width:100%;padding-top:6px;border-top:1px solid var(--desk)}
+.selection-tools span{font-size:10px;color:var(--muted);margin-right:auto}
+.selection-tools button{font-size:10px}
+.toolgroup strong{font-size:11px;color:var(--leaf)}
+.selected-media{outline:3px solid var(--leaf);outline-offset:4px;cursor:pointer}
+.editor img{cursor:pointer}
+.editor td:focus-within,.editor th:focus-within{background:var(--leaf-soft)}
+.bookmeta{margin:16px 0;padding-bottom:16px}
+.editor{line-height:1.65}
+.formrow{display:flex;gap:16px}
+.formrow label{flex:1}
+#figuredialog,#tabledialog,#boxdialog,#replacementdialog,#finddialog{max-width:620px;max-height:90vh;overflow:auto}
+#figuredialog label,#tabledialog label,#boxdialog label,#finddialog label{display:block;font-size:12px;margin:12px 0}
+#figuredialog select{padding:8px;background:white;border:1px solid var(--line);border-radius:5px;margin-left:10px}
+#figuredraft{display:block;max-height:230px;max-width:100%;margin:18px auto}
+#figuredialog input[type=file]{padding:10px;border:1px dashed var(--muted);border-radius:7px;font-size:12px}
+#tableheader,#matchcase{width:auto}
+.editor table caption{font-weight:600;padding:.5em}
+#readerpane{display:flex;flex-direction:column;flex:1;min-height:0;background:var(--line)}
+.reader-toolbar{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;flex:none;background:var(--wash);border-bottom:1px solid var(--line);padding:11px 20px}
+.reader-group{display:flex;gap:6px;align-items:center;font-size:11px}
+.reader-group label{display:flex;align-items:center;gap:5px}
+.reader-toolbar button,.reader-find button{padding:6px 9px;font-size:11px}
+.reader-toolbar select{padding:7px;border:1px solid var(--line);border-radius:6px;background:white;font-size:11px;max-width:215px}
+.reader-toolbar input{width:51px;padding:5px;border:1px solid var(--line);border-radius:5px;background:white;text-align:center;font-size:12px}
+.reader-toolbar #readerzoom{width:55px}
+.reader-find{display:flex;align-items:center;gap:8px;padding:7px 20px;background:var(--desk);flex:none}
+.reader-find input{width:175px;background:white;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:11px}
+.reader-find span{font-size:10px;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+#readerviewport{flex:1;min-height:160px;overflow:auto;overscroll-behavior:contain;outline:none;position:relative;scrollbar-gutter:stable;padding:22px 24px}
+#readerviewport:focus-visible{box-shadow:inset 0 0 0 2px var(--leaf)}
+.reader-pages{gap:24px;min-width:min-content;margin:0 auto}
+.reader-pages.continuous,.reader-pages.single{display:flex;flex-direction:column;align-items:center}
+.reader-pages.spread{display:grid;grid-template-columns:repeat(2,var(--page-width));width:max-content;align-items:start}
+.reader-page-wrap{width:var(--page-width);height:var(--page-height);position:relative;flex:none;box-shadow:0 3px 14px #293b2520;content-visibility:auto;contain-intrinsic-size:var(--page-width) var(--page-height)}
+.reader-page-wrap.current{outline:2px solid var(--muted);outline-offset:3px}
+.reader-page{position:absolute;inset:0 auto auto 0;transform-origin:top left;width:480px;height:680px;padding:42px 36px 38px;background:white;color:var(--ink);box-sizing:border-box}
+.reader-page-body.reading{margin:0!important;padding:0!important;width:408px;height:596px;min-height:596px;font-size:16px;line-height:1.5;overflow:visible;box-sizing:border-box}
+.reader-page-body.reading img{max-height:510px;object-fit:contain}
+.reader-page-body.reading figure{margin:.7em 0}
+.reader-page-body.reading h1:first-child,.reader-page-body.reading h2:first-child{margin-top:0}
+.reader-page-number{position:absolute;bottom:17px;left:0;right:0;text-align:center;font:11px sans-serif;color:var(--muted)}
+.reader-oversize{max-height:596px;overflow:auto!important}
+.reader-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px;padding:9px 20px;background:var(--wash);flex:none}
+.reader-bottom small{font-size:9px;color:var(--muted)}
+#readerthumbnails{height:115px;padding:8px 16px;display:flex;justify-content:center;gap:12px;overflow-x:auto;background:var(--desk);border-top:1px solid var(--line);flex:none}
+.reader-thumb{flex:none;display:flex;align-items:center;gap:3px;flex-direction:column;padding:5px 7px;background:var(--wash);border:1px solid var(--line);border-radius:6px;font-size:9px;color:var(--muted);min-width:72px}
+.reader-thumb.active{border-color:var(--leaf);background:var(--line);color:var(--leaf)}
+.thumb-paper{height:71px;width:50px;overflow:hidden;background:white;pointer-events:none}
+.thumb-paper .reader-page-body{transform:scale(.12);transform-origin:top left;width:408px;height:596px}
+.reader-measure{position:fixed;left:-10000px;top:0;visibility:hidden;width:480px;padding:42px 36px;pointer-events:none}
+@media(max-width:1050px){
+  .layout{grid-template-columns:220px minmax(0,1fr)}
+.workspacebar{padding:0 16px}
+.advanced-tools{padding:8px 16px}
+.selection-tools span{width:100%}
+.canvas{padding:20px}
+.paper{padding:34px}
+.reader-toolbar{padding:9px 12px}
+.reader-bottom{flex-wrap:wrap}
+}
+@media(max-width:700px){
+.layout{height:auto;min-height:calc(100vh - 68px);display:flex;flex-direction:column}
+.layout>aside{max-height:260px!important;overflow:auto;border-bottom:1px solid var(--line)}
+.workspace{min-height:760px}
+.workspacebar{height:auto;min-height:65px;padding:10px 12px;flex-wrap:wrap}
+.viewtabs{margin-left:auto}
+.canvas{min-height:360px;max-height:65vh;padding:15px}
+.paper{padding:24px;min-height:500px}
+.advanced-tools{max-height:225px;overflow:auto;padding:8px 12px}
+.toolbar{padding:6px 10px}
+.reader-toolbar{gap:8px}
+.reader-toolbar select{max-width:200px}
+.reader-find{flex-wrap:wrap;padding:8px 12px}
+.reader-find span{width:100%}
+#readerviewport{height:58vh;min-height:300px;flex:none;padding:20px}
+#readerthumbnails{justify-content:flex-start}
+.reader-bottom{padding:8px 12px}
+.reader-group{flex-wrap:wrap}
+.formrow{gap:10px}
+.organizebar{padding:10px 12px}}
+
+/* Editable pages share the reading geometry, while panels resize independently. */
+.layout{grid-template-columns:var(--sidebar-width,250px) 8px minmax(0,1fr)}
+.panel-divider{background:var(--line);position:relative;flex:none;touch-action:none;z-index:3}
+.panel-divider:hover,.panel-divider:focus-visible{background:var(--muted);outline:1px solid var(--leaf)}
+.panel-divider.vertical{width:8px;cursor:col-resize}
+.panel-divider.horizontal{height:8px;min-height:8px;cursor:row-resize}
+.panel-divider:after{content:'';position:absolute;background:var(--muted);border-radius:4px}
+.panel-divider.vertical:after{width:2px;height:34px;left:3px;top:45%}
+.panel-divider.horizontal:after{height:2px;width:34px;top:3px;left:calc(50% - 17px)}
+.resizing-panels{user-select:none;cursor:grabbing}
+.resizable-sidebar-section{min-height:75px;overflow:auto}
+.resizable-sidebar-section #chapters{max-height:none}
+.resizable-sidebar-section .chapterhead{margin-top:8px}
+.reset-panels{font-size:10px;width:100%;margin-top:18px}
+.advanced-tools{min-height:75px}
+.bookmeta{min-height:75px}
+.organizebar{flex-wrap:wrap}
+.organizebar #openpageediting{margin-left:auto;font-size:11px}
+#pageediting{display:flex;flex:1;min-height:180px;flex-direction:column;background:var(--line)}
+.editpage-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 16px;background:var(--wash);border-bottom:1px solid var(--line);flex:none}
+.editpage-toolbar button,.editpage-selection button{font-size:10px;padding:6px 8px}
+.editpage-toolbar input{width:50px;background:white;border:1px solid var(--line);padding:4px;border-radius:4px;text-align:center;font-size:11px}
+.editpage-toolbar select{font-size:11px;padding:6px;border:1px solid var(--line);background:white;border-radius:4px}
+.editpage-selection{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 16px;background:var(--leaf-soft);flex:none}
+.editpage-selection input{width:145px;border:1px solid var(--line);background:white;font-size:10px;padding:6px;border-radius:4px}
+.editpage-selection span{font-size:10px;color:var(--muted)}
+#deletecurrentpage,#deleteeditpages{color:var(--danger)}
+#editpageviewport{flex:1;min-height:180px;overflow:auto;position:relative;padding:25px 24px;scrollbar-gutter:stable;overscroll-behavior:contain}
+#editpagecanvas .reader-page-wrap{content-visibility:visible}
+#editpagecanvas .editable-page-body{outline:none;overflow:auto;caret-color:var(--leaf)}
+#editpagecanvas .editable-page-body:focus{box-shadow:0 0 0 1px var(--line)}
+#editpagecanvas .page-selected{outline:3px solid var(--danger);outline-offset:4px}
+.page-select-label{position:absolute;top:5px;right:5px;background:#f7faf2ed;z-index:2;padding:2px 5px;font-size:10px;border-radius:4px;color:var(--leaf-strong)}
+.page-select-label input{width:auto;accent-color:var(--leaf)}
+#editpagethumbs{display:flex;gap:12px;justify-content:center;overflow:auto;height:100px;min-height:65px;flex:none;padding:7px 16px;background:var(--leaf-soft)}
+.editable-page-body img{cursor:pointer}
+@media(max-width:1050px){
+  .layout{grid-template-columns:var(--sidebar-width,220px) 8px minmax(0,1fr)}
+.editpage-toolbar{padding:7px 10px}
+.editpage-selection{padding:6px 10px}}
+@media(max-width:700px){
+  .layout{display:flex;height:auto}
+.layout>.panel-divider.vertical{display:none}
+#editpageviewport{height:60vh;min-height:320px;flex:none}
+#editpagethumbs{justify-content:flex-start}
+.editpage-toolbar .reader-group{flex-wrap:wrap}
+.advanced-tools{max-height:200px}
+.editpage-toolbar{gap:6px}}
+
+#pageediting{min-height:0}
+#editpageviewport{min-height:90px}
+#editpagethumbs{height:88px}
+#editpane>.advanced-tools{height:115px;overflow:auto}
+#pageediting .reader-bottom{padding:6px 14px}
+.resizable-sidebar-section{flex:none}
+
+dialog{resize:both;overflow:auto;min-width:min(300px,88vw);min-height:180px}
+
+#editpane>.advanced-tools{height:80px;min-height:35px}
+#editpane>.organizebar{padding:6px 18px;min-height:44px}
+#editpane>.toolbar{min-height:40px;padding-top:3px;padding-bottom:3px}
+
+/* ── origem: studio.css ── */
+/* Compact studio shell. The manuscript keeps its own typography and colors. */
+
+body{font-family:var(--ui-font)}
+.saved{font-size:10px;margin-right:4px}
+button{border-radius:8px;padding:7px 10px;transition:background .15s,box-shadow .15s}
+button:hover{background:var(--wash)}
+button.primary{background:var(--leaf);border-color:var(--leaf);box-shadow:0 3px 10px #7144ed20}
+button.primary:hover{background:var(--leaf)}
+button:focus-visible,summary:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+.layout{height:calc(100dvh - 58px);grid-template-columns:var(--sidebar-width,218px) 5px minmax(0,1fr);min-height:0}
+.layout>aside{padding:16px 12px;background:#fff;overflow:auto;min-height:0}
+.eyebrow{font-size:9px;color:var(--muted);letter-spacing:1.5px}
+.bookmeta{margin:7px 0 9px;padding-bottom:9px;min-height:0}
+.bookmeta input{padding:7px 0}
+#title{font-size:15px}
+#author{font-size:12px}
+.book-settings{border-bottom:1px solid var(--line);padding:0 0 10px;margin-bottom:10px}
+.book-settings summary{cursor:pointer;font-size:11px;color:var(--muted);padding:5px 0}
+.book-settings label{font-size:11px}
+.book-settings small{font-size:10px;line-height:1.5;color:var(--muted)}
+.covercard{margin:8px 0;padding:8px;gap:9px;background:var(--wash);border:1px solid var(--leaf-soft);border-radius:10px}
+.covercard img{max-height:56px}
+.covercard button{padding:4px 7px;font-size:10px}
+.editionactions{gap:5px;margin:8px 0}
+.editionactions button{padding:6px;font-size:10px}
+.editionactions small{font-size:9px}
+.chapterhead{margin:8px 0}
+.chapter{padding:8px 6px;margin:3px 0;gap:6px;border-radius:8px}
+.chapter.active{background:var(--leaf-soft);color:var(--leaf);border-left:3px solid var(--leaf)}
+.chapterselect{font-size:12px}
+.resizable-sidebar-section{min-height:50px}
+.importbox{margin-top:12px;padding:10px 8px;background:var(--wash);border:1px dashed var(--line);min-height:0}
+.importbox .icon{font-size:18px}
+.importbox p{font-size:11px;margin:4px}
+.importbox p br{display:none}
+.importbox small{font-size:9px;margin:5px 0;line-height:1.4}
+.importbox button{padding:6px 9px;font-size:11px}
+#paste,#new{font-size:11px;margin-top:5px!important;padding:6px}
+.reset-panels{margin-top:5px}
+.workspacebar{height:43px;padding:0 14px;gap:10px;background:#fff}
+.viewtabs{padding:3px;background:var(--leaf-soft);border-radius:8px}
+.viewtabs button{padding:5px 9px;font-size:11px}
+.viewtabs button[aria-pressed=true]{color:var(--leaf)}
+.workspace-actions{display:flex;gap:5px}
+.workspace-actions button{font-size:10px;padding:6px 8px;white-space:nowrap}
+.workspace-actions button[aria-pressed=true],.workspace-actions button[aria-expanded=true]{background:var(--leaf-soft);color:var(--leaf);border-color:var(--line)}
+#editpane>.organizebar{min-height:36px;padding:4px 12px;gap:7px;background:var(--wash);border-bottom:1px solid var(--line)}
+.organizebar button{padding:5px 9px;font-size:10px}
+.organizebar>span{display:none}
+#editpane>.toolbar{min-height:36px;padding:3px 10px;background:#fff;gap:2px}
+.toolbar button{padding:5px 8px}
+.toolbar select{padding:5px;font-size:11px}
+.divider{height:18px;margin:0 4px}
+#editpane>.advanced-tools{display:none!important}
+body.expanded-tools #editpane>.advanced-tools{display:flex!important;height:auto!important;min-height:0;max-height:150px;padding:7px 12px;background:var(--wash);overflow:auto}
+.panel-divider{background:var(--leaf-soft)}
+.panel-divider.vertical{width:5px}
+.panel-divider.vertical:after{left:1px;background:var(--line)}
+.panel-divider.horizontal{display:none}
+.panel-divider:hover{background:var(--line)}
+.canvas{padding:18px 22px;background:radial-gradient(ellipse at top,var(--leaf-soft),transparent 65%),var(--leaf-soft)}
+.paper{max-width:960px;box-shadow:0 8px 35px #3f2b7014;border:1px solid var(--line);border-radius:4px;padding:44px 56px}
+.chapterlabel{color:var(--muted)}
+.editor h1{color:var(--ink)}
+.editor{color:var(--ink)}
+.statusbar{padding:6px 14px;background:#fff;font-size:10px}
+#pageediting,#readerpane{background:var(--leaf-soft)}
+.editpage-toolbar{padding:5px 12px;gap:6px;background:#fff}
+.editpage-toolbar button,.editpage-selection button{padding:4px 7px}
+.editpage-toolbar select{padding:4px}
+.reader-group{gap:4px}
+.editpage-selection{padding:4px 12px;background:var(--wash);gap:5px}
+.editpage-selection input{padding:4px}
+.editpage-selection span{color:var(--muted)}
+#editpageviewport,#readerviewport{padding:16px;background:radial-gradient(ellipse at top,var(--leaf-soft),transparent 70%),var(--leaf-soft)}
+.reader-page-wrap{box-shadow:0 6px 24px #3020531c}
+.reader-page-wrap.current{outline-color:var(--leaf)}
+.reader-bottom,#pageediting .reader-bottom{padding:5px 12px;background:var(--wash)}
+.reader-bottom small{color:var(--muted)}
+#editpagethumbs,#readerthumbnails{display:none}
+body.show-thumbnails #editpagethumbs,body.show-thumbnails #readerthumbnails{display:flex;height:82px;background:var(--wash)}
+.reader-thumb.active{background:var(--leaf-soft);border-color:var(--line);color:var(--leaf-strong)}
+.reader-toolbar{padding:6px 12px;background:#fff;gap:6px 10px}
+.reader-find{padding:5px 12px;background:var(--wash)}
+.focus-mode .layout{grid-template-columns:minmax(0,1fr)}
+.focus-mode .layout>aside,.focus-mode .layout>.panel-divider{display:none}
+.focus-mode .saved{display:none}
+.focus-mode .paper{max-width:1100px}
+dialog{border:1px solid var(--leaf-soft);box-shadow:0 24px 100px #23103f33;border-radius:18px}
+dialog::backdrop{background:#20123680;backdrop-filter:blur(4px)}
+#exportdialog{max-width:570px;padding:28px}
+.export-heading h2{font-size:25px;letter-spacing:-1px;margin:9px 0}
+.export-heading p{font-size:13px;margin:8px 0 20px}
+.export-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.export-options button{text-align:left;padding:17px;border:1px solid var(--leaf-soft);background:var(--wash)}
+.export-options button:hover{background:var(--leaf-soft);border-color:var(--line)}
+.export-options strong{display:flex;align-items:center;justify-content:space-between;font-size:18px;color:var(--leaf)}
+.export-options strong span{font-size:9px;font-weight:500;background:var(--leaf-soft);border-radius:20px;padding:4px 7px}
+.export-options small{display:block;font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
+#toast{background:var(--ink);z-index:200}
+@media(max-width:1100px){
+  .workspacebar{flex-wrap:wrap;height:auto;min-height:43px;padding:6px 10px}
+.workspace-actions{margin-left:auto}
+.layout{grid-template-columns:var(--sidebar-width,205px) 5px minmax(0,1fr)}
+.reader-bottom small{display:none}}
+@media(max-width:700px){
+.layout{height:auto;display:flex;min-height:calc(100dvh - 56px)}
+.layout>aside{max-height:180px!important;padding:10px}
+.workspace{min-height:calc(100dvh - 56px)}
+.workspacebar{gap:5px}
+.workspace-actions{width:100%;justify-content:flex-end}
+.workspace-actions button{flex:1}
+.canvas{padding:10px;max-height:75dvh}
+.paper{padding:25px}
+.editpage-toolbar{padding:5px;gap:5px}
+.editpage-selection{padding:5px;flex-wrap:wrap}
+#editpageviewport{height:65dvh;padding:12px}
+.focus-mode .layout>aside{display:none}
+.export-options{grid-template-columns:1fr}
+#exportdialog{padding:20px;max-height:90dvh}
+.export-heading h2{font-size:22px}}
+@media(prefers-reduced-motion:reduce){
+  button{transition:none}}
+
+/* Keep document controls in two compact rows, with horizontal scrolling on narrow screens. */
+.workspacebar{height:auto;min-height:43px;flex-wrap:nowrap;overflow-x:auto;flex-shrink:0}
+.workspacebar>.organizebar{padding:0;border:0;background:none;gap:5px;flex-shrink:0}
+.workspacebar>.organizebar>span{display:none}
+.workspacebar>.organizebar #undoorganize{margin-left:0}
+.workspacebar .viewtabs,.workspacebar .workspace-actions{flex-shrink:0;white-space:nowrap}
+.workspacebar .workspace-actions{margin-left:auto;width:auto}
+.editor-control-row{display:flex;align-items:center;flex-wrap:nowrap;overflow-x:auto;min-height:38px;background:#fff;border-bottom:1px solid var(--line);flex-shrink:0}
+.editor-control-row>.toolbar{flex-wrap:nowrap;flex-shrink:0;min-height:36px;padding:3px 6px;gap:1px;border:0;background:none}
+.editor-control-row>.editpage-toolbar{display:flex;flex-wrap:nowrap;flex-shrink:0;min-height:36px;border:0;border-left:1px solid var(--line);padding:3px 6px;gap:5px}
+.editor-control-row>.editpage-toolbar[hidden]{display:none}
+.editor-control-row button,.editor-control-row select,.editor-control-row label{white-space:nowrap;font-size:11px}
+.editor-control-row .reader-group{flex-wrap:nowrap;flex-shrink:0}
+#new.new-book{width:100%;margin:12px 0!important;padding:12px 10px;font-size:13px;font-weight:700;background:linear-gradient(135deg,var(--leaf),var(--leaf));color:#fff;border:1px solid var(--leaf);box-shadow:0 4px 12px #7144ed35}
+.book-settings #marginpreset{display:block;width:100%;margin:6px 0;padding:8px;font-size:11px}
+#pastedialog{width:min(1100px,96vw);max-width:96vw;height:90dvh;max-height:94dvh;padding:22px;overflow:auto}
+#pastedialog[open]{display:flex;flex-direction:column;gap:10px}
+#pastedialog h2,#pastedialog p{margin:0;flex-shrink:0}
+#pastedialog #pastetext{width:100%;flex:1;min-height:220px;max-height:none;height:auto;resize:vertical;padding:16px;border:1px solid var(--line);border-radius:10px;font:15px/1.6 var(--ui-font);white-space:pre-wrap;overflow:auto}
+#pastedialog .actions{margin-top:0;flex-shrink:0}
+
+.font-size-control{display:inline-flex;align-items:center;gap:3px;flex-shrink:0}
+.font-size-control #textsize{width:48px;padding:5px 3px;border:1px solid var(--line);border-radius:5px;background:white;text-align:center;font-size:12px;appearance:textfield}
+.font-size-control #textsize::-webkit-inner-spin-button,.font-size-control #textsize::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.font-size-control button{min-width:28px;font-size:15px;padding:3px 6px}
+
+/* A single top row keeps the manuscript controls together. */
+.layout{height:100dvh;min-height:0}
+.primary-book-actions{display:flex;align-items:center;justify-content:center;gap:7px;flex:1;min-width:max-content}
+.primary-book-actions button{font-size:11px;padding:6px 10px;white-space:nowrap}
+.layout>aside>.bookmeta{margin:0;padding-bottom:0;border-bottom:0;min-height:0;height:auto!important;max-height:none!important;overflow:visible!important}
+.book-settings{margin-top:0}
+.workspace>.statusbar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;margin:0;min-height:28px}
+#statuslanguage{grid-column:2;text-align:center;font-weight:600;color:var(--leaf)}
+.statusbar #counts{grid-column:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.statusbar #saved{grid-column:3;justify-self:end;margin:0;text-align:right}
+@media(max-width:700px){
+  .layout{height:auto;min-height:100dvh}
+.workspace{min-height:100dvh}
+.statusbar #saved{font-size:8px}}
+
+/* ── origem: fixes.css ── */
+/* Ajustes de usabilidade (nov/2026): carregado por último para sobrepor as folhas anteriores. */
+
+/* "Leitor de páginas" já existe nas abas Editar/Leitor; o botão repetido some. */
+#preview{display:none!important}
+
+/* Barra de formatação: quebra em linhas em vez de esconder botões fora da tela. */
+.editor-control-row{flex-wrap:wrap;overflow-x:visible;height:auto}
+.editor-control-row>.editpage-toolbar{flex-wrap:wrap;flex-shrink:1;min-width:0}
+
+/* Barra lateral ocupa toda a altura disponível. */
+.layout>aside{align-self:stretch}
+@media(min-width:701px){
+  .layout>aside{max-height:none;height:auto}}
+.importbox p{white-space:normal}
+
+/* Campos de metadados e backup nas configurações do livro. */
+.book-details{display:grid;gap:8px;margin-top:10px}
+.book-details label{display:block;font-size:11px;color:var(--muted)}
+.book-details input,.book-details textarea,.book-details select{display:block;width:100%;margin-top:3px;padding:6px 7px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:12px}
+.book-details textarea{min-height:64px;resize:vertical}
+.book-details .pair{display:grid;grid-template-columns:1fr 70px;gap:6px}
+.book-details small{display:block;font-size:10px;line-height:1.4;margin-top:3px;color:var(--muted)}
+.backup-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.backup-actions button{flex:1;font-size:11px;padding:6px 8px}
+.kindle-tip{margin:14px 0 0;padding:10px 12px;border-radius:8px;background:var(--wash);color:var(--muted);font-size:12px;line-height:1.5}
+.kindle-tip a{color:var(--leaf);font-weight:600}
+#asidetoggle{display:none}
+
+/* Celular */
+@media(max-width:700px){
+ .layout>aside{max-height:none!important;overflow:visible;padding:10px 12px}
+ #asidetoggle{display:flex;width:100%;justify-content:space-between;align-items:center;margin:8px 0 0;padding:9px 12px;font-size:13px;font-weight:600;background:var(--wash);border-color:var(--line);color:var(--leaf-strong)}
+ body:not(.aside-open) .layout>aside>*:not(.bookmeta):not(#asidetoggle):not(.brand){display:none!important}
+ .workspacebar{flex-wrap:wrap!important;overflow-x:visible!important;gap:6px;padding:8px 10px}
+ .workspacebar>*{flex-wrap:wrap}
+ .primary-book-actions{order:-1;width:100%;flex:0 0 100%;justify-content:stretch;min-width:0}
+ .primary-book-actions #export{flex:1;font-size:13px;padding:10px}
+ .viewtabs{flex:1 1 auto}
+ .organizebar{flex:1 1 auto;gap:6px}
+ .workspace-actions{flex-wrap:wrap}
+ .editor-control-row{overflow-x:visible}
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Camada Folha — identidade e layout finais. Fica por último de propósito:
+   as regras acima são o histórico de ajustes; aqui está o desenho atual.
+   ══════════════════════════════════════════════════════════════════ */
+body{font-family:var(--ui-font);font-size:14px;color:var(--ink);background:var(--desk);-webkit-font-smoothing:antialiased}
+#loading{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--desk);color:var(--muted);font:500 14px var(--ui-font)}
+::selection{background:var(--leaf-soft)}
+
+/* Botões: neutros por padrão; o verde fica reservado à ação principal. */
+button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:var(--radius);font-weight:500;box-shadow:none}
+button:hover{background:var(--wash);border-color:#c3cec6}
+button.primary,#new.new-book{box-shadow:none}
+button.primary{background:var(--leaf);border-color:var(--leaf);color:#fff;font-weight:600}
+button.primary:hover{background:var(--leaf-strong);border-color:var(--leaf-strong)}
+button:focus-visible,summary:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+input[type=checkbox],input[type=radio]{accent-color:var(--leaf)}
+a{color:var(--leaf)}
+
+/* Barra lateral: marca, livro, capítulos; importação e ações secundárias embaixo. */
+.layout>aside{background:var(--paper);border-right:1px solid var(--line);padding:18px 14px 14px;display:flex;flex-direction:column;gap:2px}
+.layout>aside>*{flex-shrink:0}
+.brand{display:flex;align-items:center;gap:9px;padding:0 4px 14px;margin-bottom:4px;border-bottom:1px solid var(--line);color:var(--leaf)}
+.brand .logo{width:26px;height:26px;flex:none}
+.wordmark{font:800 22px/1 var(--ui-font);letter-spacing:-.04em;color:var(--ink)}
+.bookmeta input{border-bottom-color:transparent;padding:6px 4px;border-radius:6px}
+.bookmeta input:hover{background:var(--wash)}
+.bookmeta input:focus{background:var(--wash);border-bottom-color:var(--leaf)}
+#title{font:700 16px/1.3 var(--ui-font);letter-spacing:-.01em}
+#author{font-size:13px;color:var(--muted)}
+.book-settings{border-bottom:1px solid var(--line);padding:0 4px 10px;margin:4px 0 6px}
+.book-settings summary{font-size:12px;font-weight:600;color:var(--muted)}
+.book-settings summary:hover{color:var(--ink)}
+.covercard{background:var(--wash);border:1px solid var(--line);border-radius:10px;padding:10px;margin:6px 0}
+.covercard strong{font-size:12px}
+.covercard button{font-size:11px;padding:5px 9px}
+.editionactions{gap:4px;margin:4px 0 8px}
+.editionactions button{font-size:12px;padding:7px 9px;border-color:transparent;background:transparent;color:var(--ink)}
+.editionactions button:hover{background:var(--wash);border-color:var(--line)}
+.editionactions small{font-size:11px;padding:0 9px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--ink)}
+.chapterhead{margin:6px 4px}
+.chapterhead button{width:28px;height:28px;padding:0;font-size:18px;line-height:1;display:grid;place-items:center}
+.chapter{border-left:3px solid transparent;border-radius:0 8px 8px 0;padding:7px 8px;margin:1px 0;color:var(--muted)}
+.chapter:hover{background:var(--wash)}
+.chapter.active{background:var(--leaf-soft);color:var(--leaf-strong);border-left-color:var(--leaf)}
+.chapter span{font-variant-numeric:tabular-nums;font-size:11px}
+.chapterselect{font-size:13px}
+.importbox{margin-top:10px;padding:14px 10px;background:var(--wash);border:1.5px dashed #c3cec6;border-radius:10px}
+.importbox .icon{color:var(--leaf);font-size:18px}
+.importbox p{font-size:12px;font-weight:700;margin:2px 0 4px}
+.importbox small{font-size:11px;line-height:1.45}
+.importbox button{font-size:12px;font-weight:600}
+#dropzone.dragactive{background:var(--leaf-soft);border:1.5px solid var(--leaf);box-shadow:0 0 0 4px #2f6b4f22}
+#paste,#new.new-book{width:100%;font-size:12px;padding:8px;margin:6px 0 0!important}
+#new.new-book{background:transparent;color:var(--muted);border:1px solid transparent;font-weight:600}
+#new.new-book:hover{background:var(--wash);color:var(--ink);border-color:var(--line)}
+.reset-panels{font-size:11px;border-color:transparent;background:transparent;color:var(--muted);margin-top:auto!important}
+.reset-panels:hover{color:var(--ink)}
+.panel-divider{background:var(--line)}
+.panel-divider.vertical{width:1px;position:relative}
+.panel-divider.vertical:before{content:'';position:absolute;inset:0 -4px}
+.panel-divider.vertical:after{display:none}
+.panel-divider:hover,.panel-divider:focus-visible{background:var(--leaf);outline:0}
+.layout{grid-template-columns:var(--sidebar-width,248px) 1px minmax(0,1fr)}
+
+/* Barra superior: modos à esquerda, ferramentas ao centro, exportar à direita. */
+.workspacebar{min-height:52px;padding:0 14px;gap:10px;background:var(--paper);border-bottom:1px solid var(--line)}
+.viewtabs{background:var(--desk);padding:3px;border-radius:9px;gap:2px}
+.viewtabs button{font-size:12px;font-weight:600;padding:6px 12px;border:0;border-radius:7px;color:var(--muted)}
+.viewtabs button:hover{background:transparent;color:var(--ink)}
+.viewtabs button[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px #1b252014,0 0 0 1px var(--line)}
+.workspacebar>.organizebar button{font-size:12px;padding:6px 10px}
+#organize.primary{background:var(--paper);color:var(--leaf-strong);border-color:var(--line)}
+#organize.primary:hover{background:var(--leaf-soft);border-color:#bcd3c4}
+#undoorganize{border-color:transparent;background:transparent;color:var(--muted)}
+.workspacebar .workspace-actions{order:2;margin-left:auto;gap:4px}
+.workspace-actions button{font-size:12px;padding:6px 9px;border-color:transparent;background:transparent;color:var(--muted)}
+.workspace-actions button:hover{background:var(--wash);color:var(--ink)}
+.workspace-actions button[aria-pressed=true],.workspace-actions button[aria-expanded=true]{background:var(--leaf-soft);color:var(--leaf-strong);border-color:transparent}
+.primary-book-actions{order:3;flex:none;justify-content:flex-end;min-width:0}
+.primary-book-actions #export{font-size:13px;padding:8px 16px}
+
+/* A trilha "Meu livro / capítulo" repete a lista de capítulos. */
+.workspacebar>.crumb{display:none}
+
+/* Linha de formatação e paginação. */
+.editor-control-row{background:var(--paper);border-bottom:1px solid var(--line);min-height:42px;padding:0 6px}
+.editor-control-row>.toolbar{gap:2px}
+.editor-control-row button,.editor-control-row select,.editor-control-row label{font-size:12px}
+.toolbar button{min-width:30px;height:30px;padding:0 8px;border-radius:6px;color:var(--ink)}
+.toolbar button:hover{background:var(--desk)}
+.divider{border-left-color:var(--line)}
+.editpage-toolbar button,.reader-toolbar button{border-color:transparent;background:transparent}
+.editpage-toolbar button:hover,.reader-toolbar button:hover{background:var(--desk)}
+.editpage-toolbar select,.editpage-toolbar input,.reader-toolbar select,.reader-toolbar input{border-color:var(--line);border-radius:6px;background:var(--paper)}
+.editpage-selection{background:var(--wash);border-bottom:1px solid var(--line);padding:5px 14px}
+.editpage-selection button{border-color:transparent;background:transparent}
+.editpage-selection button:hover{background:var(--paper);border-color:var(--line)}
+.editpage-selection input{border-radius:6px}
+#deletecurrentpage,#deleteeditpages{color:var(--danger)}
+
+/* Mesa e papel: a página branca sobre o verde-acinzentado. */
+.canvas,#editpageviewport,#readerviewport,#pageediting,#readerpane{background:var(--desk)}
+.paper{border:0;border-radius:2px;box-shadow:0 1px 2px #1b25200f,0 10px 30px #1b252014}
+.reader-page-wrap{box-shadow:0 1px 2px #1b25200f,0 10px 30px #1b252014}
+.reader-page-wrap.current{outline:1px solid #bcd3c4;outline-offset:6px}
+#editpagecanvas .page-selected{outline-color:var(--danger)}
+.page-select-label{background:#ffffffe6;color:var(--muted)}
+.editor,.reader-page-body.reading{font-family:var(--book-font)}
+.reader-bottom,#pageediting .reader-bottom{background:var(--paper);border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+body.show-thumbnails #editpagethumbs,body.show-thumbnails #readerthumbnails{background:var(--paper);border-top:1px solid var(--line)}
+.reader-thumb.active{background:var(--leaf-soft);border-color:var(--leaf);color:var(--leaf-strong)}
+.reader-toolbar{background:var(--paper)}
+.reader-find{background:var(--wash)}
+.workspace>.statusbar{background:var(--paper);border-top:1px solid var(--line);font-size:11px;color:var(--muted);padding:6px 14px}
+#statuslanguage{font-weight:600;color:var(--muted);text-decoration:none}
+#statuslanguage:hover{color:var(--leaf);text-decoration:underline}
+.statusbar #saved{color:var(--leaf-strong)}
+
+/* Diálogos. */
+dialog{border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 80px #1b252033;color:var(--ink)}
+dialog::backdrop{background:#1b252066;backdrop-filter:blur(3px)}
+dialog h2{font-weight:800;letter-spacing:-.02em}
+.notice,.organizesummary{background:var(--leaf-soft);color:var(--ink)}
+.compare h3{text-transform:none;letter-spacing:0;font-size:12px}
+.export-options button{background:var(--wash);border-color:var(--line)}
+.export-options button:hover{background:var(--leaf-soft);border-color:#bcd3c4}
+.export-options strong{color:var(--leaf-strong)}
+.export-options strong span{background:var(--paper);border:1px solid var(--line)}
+#toast{background:var(--ink);border-radius:10px;font-weight:500}
+
+@media(max-width:700px){
+  .layout{display:flex}
+  .layout>aside{border-right:0;border-bottom:1px solid var(--line)}
+  .brand{border-bottom:0;padding-bottom:6px}
+  .workspacebar{padding:8px 10px}
+  .primary-book-actions{order:-1}
+  .workspacebar .workspace-actions{margin-left:0}
+}

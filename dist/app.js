@@ -11,19 +11,18 @@ import {installEditionUI} from './edition-ui.mjs';
 import {sanitize,escapeXML as esc,organizeHTML,textToHTML,validateBook,readingCSS,findPageArtifacts,cleanPageArtifactsHTML} from './book-tools.mjs';
 import {importFile,createEPUB} from './importers.mjs';
 const $=id=>document.getElementById(id);
-// Importação de arquivos com DRM desativada na versão pública.
-const unlockProtectedFile=null;
 const mediaOptions=document.createElement('label');mediaOptions.style.cssText='display:block;margin:12px 0;font-size:12px';mediaOptions.innerHTML='Imagens no EPUB<select id="imagepreset" aria-label="Qualidade das imagens" style="display:block;width:100%;margin-top:6px;padding:8px"><option value="light">Leve · arquivos menores</option><option value="balanced" selected>Equilibrado · recomendado</option><option value="detailed">Mais detalhes · arquivo maior</option></select><small>Texto justificado e fonte uniforme. Figuras centralizadas; tabelas de PDF preservadas como imagens. Reimporte PDFs antigos para recuperar figuras.</small>';$('covermanager').closest('.covercard').before(mediaOptions);
 const initial=()=>({title:'Meu primeiro livro',author:'',language:'pt-BR',chapters:[{name:'Primeiras páginas',html:'<h1>Um novo capítulo começa aqui.</h1><p>Todo livro começa com uma ideia. Uma frase que ficou na memória, um texto que merece ser relido ou uma história esperando para ganhar forma.</p><p>Este é o seu espaço para reunir essas palavras. Você pode escrever aqui, colar trechos ou importar um PDF, EPUB, MOBI ou AZW sem DRM para começar.</p><blockquote>Há sempre um livro esperando para nascer das palavras que guardamos.</blockquote><h2>Uma leitura que acompanha você</h2><p>Organize suas ideias em capítulos e use Organizar texto para revisar quebras de linha e parágrafos. Quando estiver pronto, exporte em EPUB, PDF, HTML ou TXT para compartilhar sua história.</p>'}]});
 let pendingImports=[],importBusy=false;
 let book=initial(),active=0,db=null,persistTimer,revision=0,pendingImport=null,organization=null,undoOrganization=null,undoFingerprint='';
 function toast(t){$('toast').textContent=t;$('toast').style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('toast').style.display='none',6500);}
+// Chaves de armazenamento mantidas do nome anterior (livrostudio-*) para não perder livros já salvos.
 function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open('livrostudio-books',1);r.onupgradeneeded=()=>r.result.createObjectStore('books');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 function databaseRead(){return new Promise((resolve,reject)=>{const r=db.transaction('books').objectStore('books').get('current');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 function databaseWrite(value){return new Promise((resolve,reject)=>{const tx=db.transaction('books','readwrite');tx.objectStore('books').put(value,'current');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}
 async function persist(snapshot,version){try{if(db)await databaseWrite(snapshot);else localStorage.setItem('livrostudio-v1',JSON.stringify(snapshot));if(version===revision)$('saved').textContent='✓ Salvo neste navegador';}catch{$('saved').textContent='Não salvo neste navegador';toast('Não foi possível salvar no navegador. Exporte o livro para preservar seu conteúdo.');}}
 function capture(){pageEditing?.flush();book.marginPreset=$('marginpreset').value;book.imagePreset=$('imagepreset').value;book.fileName=$('exportfilename').value;book.title=$('title').value;book.author=$('author').value;book.language=book.language||'pt-BR';readBookDetails(book);book.id=book.id||crypto.randomUUID();book.chapters[active].html=$('editor').innerHTML;}
-function save(){capture();editorTools?.record();revision++;$('saved').textContent='Salvando…';clearTimeout(persistTimer);const snapshot=structuredClone(book),version=revision;persistTimer=setTimeout(()=>persist(snapshot,version),250);update();}
+function save(){capture();editorTools?.record();revision++;$('saved').textContent='Salvando…';clearTimeout(persistTimer);/* Sem cópia a cada tecla: IndexedDB.put e JSON.stringify copiam o livro de forma síncrona na gravação. */persistTimer=setTimeout(()=>persist(book,revision),250);update();}
 function wordCount(html){const d=new DOMParser().parseFromString(html,'text/html');d.querySelectorAll('br').forEach(e=>e.replaceWith(' '));d.querySelectorAll('p,div,h1,h2,h3,li,blockquote').forEach(e=>e.append(' '));return d.body.textContent.trim().split(/\s+/).filter(Boolean).length;}
 function update(){const t=$('editor').innerText.trim();$('counts').textContent=`${t?t.split(/\s+/).length:0} palavras · ${book.chapters.length} capítulo${book.chapters.length>1?'s':''}`;$('statuslanguage').textContent='Luciano';}
 function render(){ pageEditing?.invalidate();reader?.invalidate();$('marginpreset').value=book.marginPreset||'none';$('imagepreset').value=book.imagePreset||'balanced';$('title').value=book.title;$('exportfilename').value=book.fileName||book.title;$('author').value=book.author;writeBookDetails(book);$('editor').innerHTML=sanitize(book.chapters[active].html);editorTools?.reset();$('current').textContent=book.chapters[active].name;$('chapterlabel').textContent='CAPÍTULO '+String(active+1).padStart(2,'0');renderChapterList();update();editionUI?.render();pageEditing?.open(active);}
@@ -65,14 +64,14 @@ function renderImportSummary(){
     renderImportQueue();
 }
 $('pdfremovemargins').onchange=()=>{pendingImport.removeMargins=$('pdfremovemargins').checked;renderImportSummary();};$('useimportcover').onchange=()=>{pendingImport.useCover=$('useimportcover').checked;};
-async function restoreBackup(file){try{const data=validateBook(JSON.parse(await file.text()));if(!confirm(`Abrir o backup "${data.title}"? O livro atual será substituído (a operação pode ser desfeita).`))return;applyBook(data,0);toast('Backup aberto: '+data.title);}catch(e){toast('Não foi possível abrir o backup: '+(e instanceof SyntaxError?'o arquivo não é um backup do Livro Studio.':e.message));}}
+async function restoreBackup(file){try{const data=validateBook(JSON.parse(await file.text()));if(!confirm(`Abrir o backup "${data.title}"? O livro atual será substituído (a operação pode ser desfeita).`))return;applyBook(data,0);toast('Backup aberto: '+data.title);}catch(e){toast('Não foi possível abrir o backup: '+(e instanceof SyntaxError?'o arquivo não é um backup do Folha.':e.message));}}
 async function processFiles(files){
     const backups=[...files].filter(f=>/\.json$/i.test(f.name));if(backups.length){files=[...files].filter(f=>!backups.includes(f));await restoreBackup(backups[0]);}
     if(importBusy){toast('Aguarde a importação atual terminar.');return;}if(!files.length)return;importBusy=true;const btn=$('import');btn.disabled=true;$('importprogress').hidden=false;
     if(!$('importdialog').open){pendingImports=[];pendingImport=null;}
     const failures=[];
     try{for(const [index,file]of [...files].entries())try{
-        const item=await importFile(file,msg=>{btn.textContent=msg;$('importprogress').textContent=`Arquivo ${index+1}/${files.length}: ${msg}`;},{unlock:unlockProtectedFile});item.inputName=file.name;item.fileName=file.name.replace(/\.[^.]+$/,'');pendingImports.push(item);pendingImport=item;
+        const item=await importFile(file,msg=>{btn.textContent=msg;$('importprogress').textContent=`Arquivo ${index+1}/${files.length}: ${msg}`;});item.inputName=file.name;item.fileName=file.name.replace(/\.[^.]+$/,'');pendingImports.push(item);pendingImport=item;
     }catch(e){failures.push(file.name+': '+e.message);}
     if(pendingImports.length){renderImportSummary();if(!$('importdialog').open)$('importdialog').showModal();}
     $('importfailures').textContent=failures.join('\n');if(failures.length)toast(pendingImports.length?'Alguns arquivos não foram importados. Confira a lista de erros no resumo.':failures.join(' · '));
@@ -121,6 +120,6 @@ installExportFormats({getBook:()=>{capture();return book;},download,filename,exp
 installWorkspace();
 installBookDetails({save,toast,onRestore:restoreBackup});
 $('marginpreset').onchange=save;
-async function boot(){try{db=await openDB();const data=await databaseRead();if(data)book=validateBook(data);else{try{const old=JSON.parse(localStorage.getItem('livrostudio-v1'));if(old)book=validateBook(old);}catch{}await databaseWrite(book);}}catch{db=null;try{const old=JSON.parse(localStorage.getItem('livrostudio-v1'));if(old)book=validateBook(old);}catch{}$('saved').textContent='Armazenamento limitado — exporte seu livro';}render();$('loading').remove();}
+async function boot(){try{db=await openDB();const data=await databaseRead();if(data)book=validateBook(data);else{try{const old=JSON.parse(localStorage.getItem('livrostudio-v1'));if(old)book=validateBook(old);}catch{}await databaseWrite(book);}try{localStorage.removeItem('livrostudio-v1');}catch{}}catch{db=null;try{const old=JSON.parse(localStorage.getItem('livrostudio-v1'));if(old)book=validateBook(old);}catch{}$('saved').textContent='Armazenamento limitado — exporte seu livro';}render();$('loading').remove();}
 boot();
 window.addEventListener('pagehide',()=>{capture();clearTimeout(persistTimer);persist(structuredClone(book),revision);});

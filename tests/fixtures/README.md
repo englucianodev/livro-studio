@@ -1,6 +1,6 @@
 # KFX test fixtures
 
-These are small, synthetic, DRM-free books authored for Livro Studio. They contain
+These are small, synthetic, DRM-free books authored for Folha (formerly Livro Studio). They contain
 Portuguese text, Unicode, two sections deliberately stored in reverse order, an
 explicit reading order, a referenced text store, a named bold style, a list, a
 table and a one-pixel PNG. They contain no purchased book content or credentials.

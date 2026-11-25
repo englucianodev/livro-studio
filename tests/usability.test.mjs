@@ -1,9 +1,10 @@
 import {test,before} from 'node:test';
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
-import {validateBook} from '../dist/book-tools.mjs';
+import {validateBook,sanitize} from '../dist/book-tools.mjs';
 import {splitHTMLChapters} from '../dist/structure.mjs';
 import {cleanPDFMargins} from '../dist/pdf-layout.mjs';
+import {visualRegions} from '../dist/pdf-visuals.mjs';
 import {validISBN} from '../dist/book-details.mjs';
 before(()=>{const dom=new JSDOM();globalThis.DOMParser=dom.window.DOMParser;globalThis.document??=dom.window.document;});
 
@@ -41,4 +42,25 @@ test('número de página no rodapé é removido mesmo fora de ordem no PDF',()=>
  const {pages,removed}=cleanPDFMargins([page(1),page(2),page(3),page(4)]);
  assert.ok(removed.some(r=>r.kind==='número de página'));
  assert.ok(pages.every(p=>!p.lines.some(l=>/^\d+$/.test(l.text))));
+});
+
+test('ids do conteúdo importado recebem prefixo e não colidem com a interface',()=>{
+ const html=sanitize('<h2 id="title">Cap</h2><p><a href="#title">volta</a> <a href="ch2.xhtml#toast">nota</a> <a href="https://exemplo.com/#x">site</a></p>');
+ const doc=new DOMParser().parseFromString(html,'text/html');
+ assert.equal(doc.querySelector('h2').id,'bk-title');
+ assert.deepEqual([...doc.querySelectorAll('a')].map(a=>a.getAttribute('href')),['#bk-title','ch2.xhtml#bk-toast','https://exemplo.com/#x']);
+ assert.equal(sanitize(html),html,'sanitize deve ser idempotente');
+});
+
+test('divisão por sumário encontra âncoras depois do prefixo de ids',()=>{
+ const chapters=splitHTMLChapters('<p>Abertura</p><h2 id="c1">Um</h2><p>A</p><h2 id="c2">Dois</h2><p>B</p>',{anchors:[{id:'c1',title:'Um'},{id:'c2',title:'Dois'}]});
+ assert.deepEqual(chapters.map(c=>c.name).slice(-2),['Um','Dois']);
+});
+
+test('figura vetorial do PDF.js 4 (limites minX,minY,maxX,maxY) vira a região certa',()=>{
+ // Operadores reais do PDF.js 4.10 para um retângulo de 300×120 em (150,300) numa página A4.
+ const OPS={constructPath:91,fill:22,stroke:20,rectangle:19,moveTo:13,lineTo:14};
+ const list={fnArray:[91,22],argsArray:[[[19],[150,300,300,120],[150,300,450,420]],null]};
+ const viewport={width:595,height:842,convertToViewportPoint:(x,y)=>[x,842-y]};
+ assert.deepEqual(visualRegions(list,OPS,viewport),[{x:146,top:418,right:454,bottom:546}]);
 });

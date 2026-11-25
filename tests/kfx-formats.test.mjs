@@ -20,9 +20,9 @@ function check(book){
 test('KFX binário validado pelo leitor de referência: ordem, estilos, Unicode, listas, tabela e imagem',async()=>{
  const book=await importFile(new File([await fixture('sample')],'exemplo.kfx'));check(book);
  // Imported content remains editable and can be exported by the existing EPUB path.
- book.chapters[1].html+='<p>Conteúdo editado no Livro Studio.</p>';
+ book.chapters[1].html+='<p>Conteúdo editado no Folha.</p>';
  const zip=await JSZip.loadAsync(await createEPUB(book));
- assert.match(await zip.file('OEBPS/ch1.xhtml').async('string'),/Conteúdo editado no Livro Studio/);
+ assert.match(await zip.file('OEBPS/ch1.xhtml').async('string'),/Conteúdo editado no Folha/);
 });
 async function packaged(names){const zip=new JSZip();for(const name of names)zip.file('book/'+name+'.kfx',await fixture(name));return new File([await zip.generateAsync({type:'uint8array'})],'livro.kfx-zip');}
 test('KFX-ZIP reúne contêineres em qualquer ordem, incluindo recursos e símbolos compartilhados',async()=>{

@@ -1,5 +1,5 @@
 {
-  "name": "livro-studio",
+  "name": "folha",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -12,13 +12,11 @@
   "engines": {
     "node": ">=20"
   },
-  "dependencies": {
-    "docx": "9.15.1",
-    "lzma-purejs": "0.9.3",
-    "mammoth": "1.13.0"
-  },
   "devDependencies": {
+    "docx": "9.15.1",
     "esbuild": "0.28.2",
-    "jsdom": "26.1.0"
+    "jsdom": "26.1.0",
+    "jszip": "3.10.2",
+    "mammoth": "1.13.0"
   }
 }

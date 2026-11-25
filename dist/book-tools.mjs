@@ -3,6 +3,9 @@ export const escapeXML = value => String(value).replace(/[&<>"']/g, c => ({'&':'
 export const parseHTML = html => new DOMParser().parseFromString(html, 'text/html');
 const blocks = 'p,div,h1,h2,h3,h4,h5,h6,blockquote,pre,li,table,figure,hr';
 const allowed = new Set('p div h1 h2 h3 h4 h5 h6 strong b em i u s br blockquote ul ol li span pre code sup sub hr a img figure figcaption table caption colgroup col tfoot thead tbody tr th td'.split(' '));
+// Ids do livro ganham prefixo para não colidir com os ids da interface (ex.: "title", "toast").
+export const contentId = id => id.startsWith('bk-') ? id : 'bk-' + id;
+const internalHref = href => href.replace(/#(.+)$/, (_, fragment) => '#' + contentId(fragment));
 export function sanitize(html) {
     const doc = parseHTML(html);
     doc.querySelectorAll('script,style,iframe,object,embed,svg,math,form,input,button,link,meta,base').forEach(e => e.remove());
@@ -16,14 +19,17 @@ export function sanitize(html) {
         const keepLines = e.getAttribute('data-keep-lines') === 'true' || /^(pre|pre-wrap|break-spaces)$/.test(e.style.whiteSpace);
         const className = /(?:^|[\s_-])(verse|poem|poetry|verso|poesia)(?:$|[\s_-])/i.test(e.className) ? 'verse' : '';
         [...e.attributes].forEach(a => e.removeAttribute(a.name));
-        if (id) e.id = id;
+        if (id) e.id = contentId(id);
         if(userFormat){e.setAttribute('data-editor-format','true');for(const key of ['color','backgroundColor'])if(/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]+)$/i.test(userStyles[key]))e.style[key]=userStyles[key];if(['0.85em','1em','1.25em','1.5em'].includes(userStyles.fontSize)||/^(?:[6-9]|[12]\d|30)pt$/.test(userStyles.fontSize))e.style.fontSize=userStyles.fontSize;}
         if(tag==='img'&&['25%','50%','75%','100%'].includes(mediaWidth))e.setAttribute('data-media-width',mediaWidth);
         if(toc==='true')e.setAttribute('data-toc','true');
         if(['td','th'].includes(tag))for(const [k,v]of Object.entries(spans))if(/^[1-9]\d?$/.test(v||''))e.setAttribute(k,v);
         if (['left','right','center','justify'].includes(align)) e.style.textAlign = align;
         if (keepLines || className) e.setAttribute('data-keep-lines', 'true');
-        if (tag === 'a' && href && (/^(#|ch\d+\.xhtml(?:#|$))/.test(href) || /^(https?:\/\/|mailto:)[^\s"<>]+$/i.test(href))) e.setAttribute('href', href);
+        if (tag === 'a' && href) {
+            if (/^(#|ch\d+\.xhtml(?:#|$))/.test(href)) e.setAttribute('href', internalHref(href));
+            else if (/^(https?:\/\/|mailto:)[^\s"<>]+$/i.test(href)) e.setAttribute('href', href);
+        }
         if (tag === 'img') {
             if (!/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(src || '')) {
                 e.replaceWith(doc.createTextNode(alt ? `[Imagem: ${alt}]` : '[Imagem não importada]'));

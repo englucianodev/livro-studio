@@ -120,8 +120,8 @@ export async function readMOBI(file,progress=()=>{}) {
 export function pdfLinesToText(items,styles={}) { return linesToText(extractPDFLines(items)); }
 export async function readPDF(file,progress=()=>{}) {
     if(!globalThis.pdfjsLib)throw Error('O leitor PDF não carregou. Recarregue a página.');
-    pdfjsLib.GlobalWorkerOptions.workerSrc='./vendor/pdf.worker.min.js';
-    const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+    pdfjsLib.GlobalWorkerOptions.workerSrc='./vendor/pdf.worker.min.mjs';
+    const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer(),isEvalSupported:false}).promise;
     try{
         const pages=[],sourceID=crypto.randomUUID();let cover=null,visualWarnings=0;
         for(let n=1;n<=pdf.numPages;n++){
@@ -146,15 +146,7 @@ export async function readPDF(file,progress=()=>{}) {
         return {title:useTitle,fileName:name,cover,author:metaAuthor.length<=200?metaAuthor:'',language:'pt-BR',chapters:cleaned.chapters,sources:[source],pdfAlternatives:{cleaned:cleaned.chapters,original:original.chapters,removed:cleaned.removed},notes:[`${pages.length} páginas de origem · ${outline.length} entradas no sumário · ${cleaned.chapters.length} seções detectadas. Confira a divisão antes de importar.`,`${cleaned.removed.length} elementos de margem detectados. As páginas de origem ficam disponíveis em Gerenciar páginas.`,`${pages.reduce((n,p)=>n+p.visuals.length,0)} blocos visuais preservados e otimizados. Tabelas e gráficos de PDF são imagens; confira a legibilidade na prévia.${visualWarnings?' Atenção: falha na captura visual de '+visualWarnings+' página(s); confira o original.':''}`]};
     }finally{await pdf.destroy();}
 }
-export async function importFile(file,progress,{unlock}={}) {
-    try{return await importUnprotectedFile(file,progress);}
-    catch(error){
-        if(!unlock||!/\.(?:mobi|azw3?|prc|kfx(?:-zip)?)$/i.test(file.name)||!/DRM/i.test(error.message))throw error;
-        const unprotected=await unlock(file,progress);
-        return importUnprotectedFile(unprotected,progress);
-    }
-}
-async function importUnprotectedFile(file,progress) {
+export async function importFile(file,progress) {
     if(file.size>MAX_FILE)throw Error('Importe um arquivo de até 80 MB.');
     const ext=file.name.split('.').pop().toLowerCase();
     if(['doc','docx'].includes(ext))return (await import('./word-formats.mjs')).readWord(file,progress);
